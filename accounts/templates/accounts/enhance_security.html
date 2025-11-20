@@ -1,0 +1,703 @@
+{% extends 'base.html' %}
+
+{% block title %}Security Enhancement Analysis - Health Progress{% endblock %}
+
+{% block extra_css %}
+<style>
+    .security-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .security-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+    
+    .threat-level-critical { background: linear-gradient(45deg, #ff4444, #cc0000); }
+    .threat-level-high { background: linear-gradient(45deg, #ff8800, #ff4400); }
+    .threat-level-medium { background: linear-gradient(45deg, #ffaa00, #ff8800); }
+    .threat-level-low { background: linear-gradient(45deg, #44ff44, #00aa00); }
+    
+    .security-module {
+        padding: 1.5rem;
+        margin: 0.5rem 0;
+        border-radius: 12px;
+        border-left: 5px solid;
+    }
+    
+    .module-active { border-left-color: #22c55e; background: rgba(34, 197, 94, 0.1); }
+    .module-alert { border-left-color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+    .module-critical { border-left-color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+    .module-encrypted { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+    
+    .data-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    
+    .progress-enhanced {
+        height: 8px;
+        border-radius: 4px;
+        background: #f1f5f9;
+        overflow: hidden;
+    }
+    
+    .progress-enhanced .progress-bar {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.6s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="text-warning fw-bold">
+                        <i class="bi bi-shield-lock-fill"></i> Security Enhancement Analysis
+                    </h1>
+                    <p class="text-muted lead">Comprehensive Security Intelligence Dashboard</p>
+                </div>
+                <div class="text-end">
+                    <a href="{% url 'accounts:admin_dashboard' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Admin Dashboard
+                    </a>
+                    <button class="btn btn-primary" onclick="location.reload()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh Data
+                    </button>
+                    <button class="btn btn-danger" onclick="resetSecurityData()" id="resetBtn">
+                        <i class="bi bi-trash"></i> Reset All Data
+                    </button>
+                </div>
+            </div>
+            <div class="text-muted">
+                <i class="bi bi-clock"></i> Last Updated: {{ data_last_updated|default:"Unknown" }}
+            </div>
+            <!-- CSRF Token for AJAX requests -->
+            {% csrf_token %}
+            
+            <!-- Alternative Reset Method (Form-based) -->
+            <div class="mt-3 p-3 bg-light rounded">
+                <h6 class="text-info mb-2">🔧 Alternative Reset Method:</h6>
+                <form method="POST" action="{% url 'accounts:reset_security_data' %}" style="display: inline;" onsubmit="this.querySelector('button').innerHTML='Resetting...'; this.querySelector('button').disabled=true;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('⚠️ This will clear ALL security cache data!\n\nAre you sure you want to continue?')">
+                        <i class="bi bi-exclamation-triangle"></i> Form Reset (Alternative Method)
+                    </button>
+                </form>
+                <small class="text-muted d-block mt-1">Use this if the AJAX reset button doesn't work</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Overview Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="security-card">
+                <div class="card-body text-center" style="background: linear-gradient(135deg, #3b82f6, #1e40af);">
+                    <div class="text-white">
+                        <i class="bi bi-globe" style="font-size: 3rem;"></i>
+                        <div class="metric-value">{{ security_stats.total_requests_24h|floatformat:0 }}</div>
+                        <p class="mb-0">Total Requests (24h)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="security-card">
+                <div class="card-body text-center" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                    <div class="text-white">
+                        <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem;"></i>
+                        <div class="metric-value">{{ security_stats.threat_events }}</div>
+                        <p class="mb-0">Threat Events</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="security-card">
+                <div class="card-body text-center" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                    <div class="text-white">
+                        <i class="bi bi-shield-x" style="font-size: 3rem;"></i>
+                        <div class="metric-value">{{ security_stats.blocked_requests }}</div>
+                        <p class="mb-0">Blocked Requests</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="security-card">
+                <div class="card-body text-center" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                    <div class="text-white">
+                        <i class="bi bi-shield-check" style="font-size: 3rem;"></i>
+                        <div class="metric-value">{{ security_stats.avg_threat_score|floatformat:1 }}</div>
+                        <p class="mb-0">Avg Threat Score</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Modules Status -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="security-card">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0"><i class="bi bi-cpu"></i> Security Modules Status</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for module_key, module_data in modules_status.items %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="security-module {% if module_data.status == 'active' %}module-active{% elif module_data.status == 'alert' or module_data.status == 'high_alert' %}module-alert{% elif module_data.status == 'threat_blocked' %}module-critical{% else %}module-encrypted{% endif %}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="fw-bold text-uppercase">{{ module_key|title }}</h6>
+                                        <span class="badge bg-{% if module_data.status == 'active' %}success{% elif module_data.status == 'alert' or module_data.status == 'high_alert' %}warning{% elif module_data.status == 'threat_blocked' %}danger{% else %}primary{% endif %}">
+                                            {{ module_data.status|upper }}
+                                        </span>
+                                    </div>
+                                    <div class="status-indicator {% if module_data.status == 'active' %}threat-level-low{% elif module_data.status == 'alert' %}threat-level-medium{% elif module_data.status == 'high_alert' or module_data.status == 'threat_blocked' %}threat-level-critical{% else %}threat-level-low{% endif %}"></div>
+                                </div>
+                                {% if module_data.coverage %}
+                                <div class="mt-2">
+                                    <small class="text-muted">Coverage: {{ module_data.coverage }}%</small>
+                                    <div class="progress-enhanced">
+                                        <div class="progress-bar bg-success" style="width: {{ module_data.coverage }}%"></div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if module_data.effectiveness %}
+                                <div class="mt-2">
+                                    <small class="text-muted">Effectiveness: {{ module_data.effectiveness }}%</small>
+                                    <div class="progress-enhanced">
+                                        <div class="progress-bar bg-warning" style="width: {{ module_data.effectiveness }}%"></div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if module_data.accuracy %}
+                                <div class="mt-2">
+                                    <small class="text-muted">Accuracy: {{ module_data.accuracy }}%</small>
+                                    <div class="progress-enhanced">
+                                        <div class="progress-bar bg-info" style="width: {{ module_data.accuracy }}%"></div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <p class="text-muted text-center">No security modules data available</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Threats Analysis -->
+    <div class="row mb-4">
+        <!-- Attacking IPs -->
+        <div class="col-md-4 mb-3">
+            <div class="security-card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-globe"></i> Top Attacking IPs</h5>
+                </div>
+                <div class="card-body">
+                    {% for ip, count in top_threats.attacking_ips %}
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                        <div>
+                            <code class="text-danger">{{ ip }}</code>
+                            {% if count.attack_types %}
+                            <br><small class="text-muted">{{ count.attack_types|join:", " }}</small>
+                            {% endif %}
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-danger">{{ count.attack_count|default:count }} attacks</span>
+                            {% if count.threat_score %}
+                            <br><small class="text-muted">Score: {{ count.threat_score }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No attacking IPs detected</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Attack Types -->
+        <div class="col-md-4 mb-3">
+            <div class="security-card h-100">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0"><i class="bi bi-bug"></i> Attack Types</h5>
+                </div>
+                <div class="card-body">
+                    {% for attack_type, count in top_threats.attack_types %}
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                        <div>
+                            <strong>{{ attack_type }}</strong>
+                        </div>
+                        <div>
+                            <span class="badge bg-warning text-dark">{{ count }} attempts</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No attack types recorded</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Targeted Paths -->
+        <div class="col-md-4 mb-3">
+            <div class="security-card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-folder"></i> Targeted Paths</h5>
+                </div>
+                <div class="card-body">
+                    {% for path, count in top_threats.targeted_paths %}
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                        <div>
+                            <code>{{ path }}</code>
+                        </div>
+                        <div>
+                            <span class="badge bg-info">{{ count }} hits</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted text-center">No targeted paths recorded</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Performance & Health -->
+    <div class="row mb-4">
+        <!-- System Performance -->
+        <div class="col-md-6 mb-3">
+            <div class="security-card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-cpu"></i> System Performance</h5>
+                </div>
+                <div class="card-body">
+                    {% if performance_metrics %}
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="fw-bold text-muted">CPU Usage</label>
+                                <div class="progress-enhanced">
+                                    <div class="progress-bar bg-{% if performance_metrics.cpu_usage > 80 %}danger{% elif performance_metrics.cpu_usage > 60 %}warning{% else %}success{% endif %}" 
+                                         style="width: {{ performance_metrics.cpu_usage }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ performance_metrics.cpu_usage }}%</small>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="fw-bold text-muted">Memory Usage</label>
+                                <div class="progress-enhanced">
+                                    <div class="progress-bar bg-{% if performance_metrics.memory_usage > 80 %}danger{% elif performance_metrics.memory_usage > 60 %}warning{% else %}success{% endif %}" 
+                                         style="width: {{ performance_metrics.memory_usage }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ performance_metrics.memory_usage }}%</small>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="fw-bold text-muted">Disk Usage</label>
+                                <div class="progress-enhanced">
+                                    <div class="progress-bar bg-info" style="width: {{ performance_metrics.disk_usage }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ performance_metrics.disk_usage }}%</small>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="fw-bold text-muted">Uptime</label>
+                                <div class="progress-enhanced">
+                                    <div class="progress-bar bg-success" style="width: {{ performance_metrics.uptime_percentage }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ performance_metrics.uptime_percentage }}%</small>
+                            </div>
+                        </div>
+                        {% if performance_metrics.avg_latency %}
+                        <div class="text-center mt-3">
+                            <span class="badge bg-primary">Avg Latency: {{ performance_metrics.avg_latency }}ms</span>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <p class="text-muted text-center">No performance data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Intelligence Summary -->
+        <div class="col-md-6 mb-3">
+            <div class="security-card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-shield-fill-check"></i> Intelligence Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <h3 class="text-danger">{{ security_stats.malicious_ips }}</h3>
+                            <small class="text-muted">Malicious IPs</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h3 class="text-warning">{{ security_stats.suspicious_domains }}</h3>
+                            <small class="text-muted">Suspicious Domains</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h3 class="text-info">{{ security_stats.unique_ips }}</h3>
+                            <small class="text-muted">Unique IPs (24h)</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h3 class="text-success">{{ security_engines|length|default:"0" }}</h3>
+                            <small class="text-muted">Active Engines</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Security Engines Status -->
+                    {% if security_engines %}
+                    <div class="mt-3">
+                        <h6 class="fw-bold">Security Engines Status:</h6>
+                        {% for engine, status in security_engines.items %}
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-capitalize">{{ engine|title }}</span>
+                            <span class="badge bg-{% if status == 'operational' %}success{% else %}warning{% endif %}">
+                                {{ status|upper }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Security Events -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="security-card">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0"><i class="bi bi-activity"></i> Recent Security Events</h4>
+                </div>
+                <div class="card-body">
+                    {% if recent_events %}
+                    <div class="data-table">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Event Type</th>
+                                        <th>Source IP</th>
+                                        <th>Severity</th>
+                                        <th>Threat Score</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for event in recent_events %}
+                                    <tr>
+                                        <td><small>{{ event.formatted_time|default:event.timestamp }}</small></td>
+                                        <td>
+                                            <span class="badge bg-info">{{ event.event_type|default:"Unknown" }}</span>
+                                        </td>
+                                        <td><code>{{ event.source_ip|default:"N/A" }}</code></td>
+                                        <td>
+                                            <span class="badge bg-{% if event.severity == 'critical' %}danger{% elif event.severity == 'high' %}warning{% elif event.severity == 'medium' %}info{% else %}secondary{% endif %}">
+                                                {{ event.severity|upper|default:"UNKNOWN" }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if event.threat_score %}
+                                                <span class="badge bg-{% if event.threat_score > 80 %}danger{% elif event.threat_score > 50 %}warning{% else %}success{% endif %}">
+                                                    {{ event.threat_score }}
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if event.action_taken == 'blocked' or event.action_taken == 'ip_blocked' %}danger{% elif event.action_taken == 'monitored' %}warning{% else %}secondary{% endif %}">
+                                                {{ event.action_taken|upper|default:"LOGGED" }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="bi bi-shield-check" style="font-size: 3rem;"></i>
+                        <h5>No Recent Security Events</h5>
+                        <p>The system is secure with no recent security events to display.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Raw Data Section (Collapsible) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="security-card">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">
+                        <button class="btn btn-link text-white p-0" type="button" data-bs-toggle="collapse" data-bs-target="#rawDataSection">
+                            <i class="bi bi-code-square"></i> Raw Security Data (Click to Expand)
+                        </button>
+                    </h4>
+                </div>
+                <div class="collapse" id="rawDataSection">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">Realtime Metrics:</h6>
+                                <pre class="bg-light p-3 rounded"><code>{{ security_data.realtime_metrics|pprint }}</code></pre>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">Threat Intelligence:</h6>
+                                <pre class="bg-light p-3 rounded"><code>{{ security_data.threat_intelligence|pprint }}</code></pre>
+                            </div>
+                        </div>
+                        
+                        {% if security_data.incidents %}
+                        <div class="mt-3">
+                            <h6 class="fw-bold">Incidents Summary:</h6>
+                            <pre class="bg-light p-3 rounded"><code>{{ security_data.incidents|pprint }}</code></pre>
+                        </div>
+                        {% endif %}
+                        
+                        {% if security_data.system_health %}
+                        <div class="mt-3">
+                            <h6 class="fw-bold">System Health:</h6>
+                            <pre class="bg-light p-3 rounded"><code>{{ security_data.system_health|pprint }}</code></pre>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Reset Confirmation Modal -->
+<div class="modal fade" id="resetConfirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Confirm Data Reset
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Warning:</strong> This action will permanently delete all security data including:
+                </div>
+                <ul class="mb-3">
+                    <li>All threat detection data</li>
+                    <li>Attack logs and timeline events</li>
+                    <li>Security metrics and statistics</li>
+                    <li>Blocked IPs and threat intelligence</li>
+                    <li>System performance history</li>
+                    <li>Security incident records</li>
+                </ul>
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-octagon-fill"></i>
+                    <strong>This action cannot be undone!</strong>
+                </div>
+                <p class="mb-0">Are you sure you want to reset all security data?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-danger" onclick="confirmReset()">
+                    <i class="bi bi-trash"></i> Yes, Reset All Data
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh every 5 minutes
+    setInterval(function() {
+        location.reload();
+    }, 300000); // 5 minutes
+    
+    // Add tooltips to badges
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+
+function resetSecurityData() {
+    console.log('Reset button clicked'); // Debug log
+    // Show confirmation modal
+    var resetModal = new bootstrap.Modal(document.getElementById('resetConfirmModal'));
+    resetModal.show();
+}
+
+function confirmReset() {
+    console.log('Confirm reset clicked');
+    const resetBtn = document.getElementById('resetBtn');
+    const originalText = resetBtn.innerHTML;
+    
+    // Show loading state
+    resetBtn.disabled = true;
+    resetBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Resetting...';
+    
+    // Get CSRF token (simpler approach)
+    const csrfToken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    
+    if (!csrfToken) {
+        alert('CSRF token not found. Please refresh the page and try again.');
+        resetBtn.disabled = false;
+        resetBtn.innerHTML = originalText;
+        return;
+    }
+    
+    // Create form data for better compatibility
+    const formData = new FormData();
+    formData.append('csrfmiddlewaretoken', csrfToken);
+    
+    console.log('Making reset request...');
+    
+    // Make AJAX call to reset endpoint
+    fetch('{% url "accounts:reset_security_data" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin',
+        body: formData
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+    })
+    .then(data => {
+        console.log('Reset response:', data);
+        
+        // Hide modal first
+        const modal = bootstrap.Modal.getInstance(document.getElementById('resetConfirmModal'));
+        if (modal) {
+            modal.hide();
+        }
+        
+        if (data.status === 'success') {
+            // Show success notification
+            alert(`✅ Reset Successful!\n\nCleared ${data.cleared_keys} cache entries.\n\nThe page will reload to show fresh data.`);
+            
+            // Immediate reload to show cleared data
+            window.location.reload();
+        } else {
+            alert(`❌ Reset Failed!\n\nError: ${data.message || 'Unknown error occurred'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Reset error:', error);
+        
+        // Hide modal on error too
+        const modal = bootstrap.Modal.getInstance(document.getElementById('resetConfirmModal'));
+        if (modal) {
+            modal.hide();
+        }
+        
+        alert(`❌ Network Error!\n\n${error.message}\n\nPlease check your connection and try again.`);
+    })
+    .finally(() => {
+        // Always restore button state
+        resetBtn.disabled = false;
+        resetBtn.innerHTML = originalText;
+    });
+}
+
+function showNotification(type, title, message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <div class="d-flex align-items-center">
+            <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'} me-2"></i>
+            <div>
+                <strong>${title}</strong><br>
+                <small>${message}</small>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Use === for exact match
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    console.log(`Cookie ${name}:`, cookieValue); // Debug log
+    return cookieValue;
+}
+</script>
+{% endblock %}

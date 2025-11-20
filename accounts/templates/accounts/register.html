@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}สมัครสมาชิก - Health Progress{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <div class="card shadow-lg">
+            <div class="card-header text-center">
+                <h3 class="mb-0"><i class="bi bi-person-plus-fill"></i> สมัครสมาชิก</h3>
+                <p class="mb-0 mt-2" style="font-size: 1.125rem;">เริ่มต้นดูแลสุขภาพของคุณวันนี้</p>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" id="registerForm">
+                    {% csrf_token %}
+                    
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-info-circle-fill"></i> 
+                        <strong>หมายเหตุ:</strong> กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง
+                    </div>
+                    
+                    <!-- Username -->
+                    <div class="mb-4">
+                        <label for="id_username" class="form-label">
+                            <i class="bi bi-person"></i> ชื่อผู้ใช้ <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" name="username" class="form-control" id="id_username" required>
+                        <small class="form-text text-muted">ใช้สำหรับเข้าสู่ระบบ (ภาษาอังกฤษและตัวเลขเท่านั้น)</small>
+                    </div>
+                    
+                    <!-- Email -->
+                    <div class="mb-4">
+                        <label for="id_email" class="form-label">
+                            <i class="bi bi-envelope"></i> อีเมล <span class="text-danger">*</span>
+                        </label>
+                        <input type="email" name="email" class="form-control" id="id_email" required>
+                        <small class="form-text text-muted">ใช้สำหรับรีเซ็ตรหัสผ่านและการแจ้งเตือน</small>
+                    </div>
+                    
+                    <!-- Password -->
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label for="id_password1" class="form-label">
+                                <i class="bi bi-lock"></i> รหัสผ่าน <span class="text-danger">*</span>
+                            </label>
+                            <input type="password" name="password1" class="form-control" id="id_password1" required>
+                            <small class="form-text text-muted">อย่างน้อย 8 ตัวอักษร</small>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label for="id_password2" class="form-label">
+                                <i class="bi bi-lock-fill"></i> ยืนยันรหัสผ่าน <span class="text-danger">*</span>
+                            </label>
+                            <input type="password" name="password2" class="form-control" id="id_password2" required>
+                            <small class="form-text text-muted">กรอกรหัสผ่านอีกครั้ง</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Personal Information -->
+                    <div class="alert alert-success mb-4">
+                        <h5 class="alert-heading"><i class="bi bi-person-badge"></i> ข้อมูลส่วนบุคคล</h5>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label for="id_firstname" class="form-label">
+                                <i class="bi bi-person-fill"></i> ชื่อจริง <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="firstname" class="form-control" id="id_firstname" required>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label for="id_lastname" class="form-label">
+                                <i class="bi bi-person-fill"></i> นามสกุล <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="lastname" class="form-control" id="id_lastname" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label for="id_gender" class="form-label">
+                                <i class="bi bi-gender-ambiguous"></i> เพศ <span class="text-danger">*</span>
+                            </label>
+                            <select name="gender" class="form-select" id="id_gender" required>
+                                <option value="">-- เลือกเพศ --</option>
+                                <option value="male">ชาย</option>
+                                <option value="female">หญิง</option>
+                                <option value="other">อื่นๆ</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label for="id_birthdate" class="form-label">
+                                <i class="bi bi-calendar-event"></i> วันเกิด <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" name="birthdate" class="form-control" id="id_birthdate" required>
+                            <small class="form-text text-muted">ระบบจะคำนวณอายุอัตโนมัติ</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="id_phone" class="form-label">
+                            <i class="bi bi-telephone"></i> เบอร์โทรศัพท์ <span class="text-danger">*</span>
+                        </label>
+                        <input type="tel" name="phone" class="form-control" id="id_phone" placeholder="0812345678" required>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="id_nickname" class="form-label">
+                            <i class="bi bi-chat-heart"></i> ชื่อเล่น
+                        </label>
+                        <input type="text" name="nickname" class="form-control" id="id_nickname">
+                    </div>
+                    
+                    <!-- PDPA Agreement Section -->
+                    <div class="card border-primary mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-shield-lock-fill"></i> นโยบายความเป็นส่วนตัวและการคุ้มครองข้อมูลส่วนบุคคล (PDPA)</h5>
+                        </div>
+                        <div class="card-body" style="max-height: 400px; overflow-y: auto; font-size: 1rem; line-height: 1.8;">
+                            <h6 class="text-primary mb-3"><strong>การเก็บรวบรวมข้อมูลส่วนบุคคล</strong></h6>
+                            <p>
+                                ระบบ Health Progress เก็บรวบรวมข้อมูลส่วนบุคคลของท่าน ได้แก่ ชื่อ-นามสกุล เพศ อายุ วันเกิด เบอร์โทรศัพท์ อีเมล 
+                                และข้อมูลสุขภาพ เช่น ความดันโลหิต น้ำหนัก ส่วนสูง BMI เปอร์เซ็นต์ไขมัน ค่าน้ำตาล คอเลสเตอรอล และอื่นๆ
+                            </p>
+                            
+                            <h6 class="text-primary mb-3 mt-4"><strong>วัตถุประสงค์ในการใช้ข้อมูล</strong></h6>
+                            <p>เราใช้ข้อมูลของท่านเพื่อ:</p>
+                            <ul>
+                                <li>การให้บริการระบบติดตามสุขภาพ</li>
+                                <li>การวิเคราะห์และแสดงผลข้อมูลสุขภาพของท่าน</li>
+                                <li>การให้คำแนะนำด้านสุขภาพที่เหมาะสม</li>
+                                <li>การปรับปรุงและพัฒนาระบบให้ดียิ่งขึ้น</li>
+                                <li>การติดต่อสื่อสารเกี่ยวกับบริการ</li>
+                            </ul>
+                            
+                            <h6 class="text-primary mb-3 mt-4"><strong>การเปิดเผยข้อมูล</strong></h6>
+                            <p>
+                                เราจะไม่เปิดเผยข้อมูลส่วนบุคคลของท่านต่อบุคคลภายนอก เว้นแต่:
+                            </p>
+                            <ul>
+                                <li>ได้รับความยินยอมจากท่าน</li>
+                                <li>เป็นการปฏิบัติตามกฎหมาย</li>
+                                <li>เพื่อปกป้องสิทธิและความปลอดภัยของระบบ</li>
+                            </ul>
+                            
+                            <h6 class="text-primary mb-3 mt-4"><strong>ระยะเวลาการเก็บรักษาข้อมูล</strong></h6>
+                            <p>
+                                เราจะเก็บรักษาข้อมูลของท่านตลอดระยะเวลาที่ท่านใช้บริการ และเป็นไปตามระยะเวลาที่กฎหมายกำหนด
+                                หากท่านต้องการลบข้อมูล สามารถติดต่อเราได้ตลอดเวลา
+                            </p>
+                            
+                            <h6 class="text-primary mb-3 mt-4"><strong>สิทธิของเจ้าของข้อมูล</strong></h6>
+                            <p>ท่านมีสิทธิ์:</p>
+                            <ul>
+                                <li>เข้าถึงและขอสำเนาข้อมูลส่วนบุคคล</li>
+                                <li>ขอแก้ไขข้อมูลให้ถูกต้องและเป็นปัจจุบัน</li>
+                                <li>ขอลบหรือทำลายข้อมูล</li>
+                                <li>ขอระงับการใช้ข้อมูล</li>
+                                <li>โอนย้ายข้อมูล</li>
+                                <li>คัดค้านการประมวลผลข้อมูล</li>
+                            </ul>
+                            
+                            <h6 class="text-primary mb-3 mt-4"><strong>ความปลอดภัยของข้อมูล</strong></h6>
+                            <p>
+                                เราใช้มาตรการรักษาความปลอดภัยที่เหมาะสม รวมถึงการเข้ารหัสข้อมูล การควบคุมการเข้าถึง 
+                                และการสำรองข้อมูลเพื่อป้องกันการสูญหายหรือการเข้าถึงโดยไม่ได้รับอนุญาต
+                            </p>
+                            
+                            <h6 class="text-primary mb-3 mt-4"><strong>การติดต่อ</strong></h6>
+                            <p>
+                                หากท่านมีคำถามเกี่ยวกับนโยบายความเป็นส่วนตัวหรือต้องการใช้สิทธิของท่าน 
+                                กรุณาติดต่อเราผ่านระบบหรืออีเมลที่ลงทะเบียนไว้
+                            </p>
+                            
+                            <div class="alert alert-warning mt-4">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                <strong>สำคัญ:</strong> การสมัครสมาชิกและใช้บริการระบบ Health Progress 
+                                หมายความว่าท่านยอมรับนโยบายความเป็นส่วนตัวและเงื่อนไขการใช้งานนี้
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- PDPA Acceptance Checkbox -->
+                    <div class="form-check mb-4 p-4" style="background: #f0fdf4; border-radius: 12px; border: 2px solid #10b981;">
+                        <input class="form-check-input" type="checkbox" name="accept_pdpa" id="accept_pdpa" required 
+                               style="width: 25px; height: 25px; margin-top: 0.25rem;">
+                        <label class="form-check-label ms-3" for="accept_pdpa" style="font-size: 1.25rem; line-height: 1.6;">
+                            <strong class="text-success">
+                                <i class="bi bi-check-circle"></i> 
+                                ข้าพเจ้าได้อ่านและยอมรับนโยบายความเป็นส่วนตัวและการคุ้มครองข้อมูลส่วนบุคคล (PDPA) 
+                                และยินยอมให้ระบบเก็บรวบรวม ใช้ และเปิดเผยข้อมูลส่วนบุคคลตามที่ระบุไว้ข้างต้น
+                            </strong>
+                        </label>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <i class="bi bi-person-plus-fill"></i> สมัครสมาชิก
+                        </button>
+                        <a href="{% url 'accounts:login' %}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-arrow-left"></i> มีบัญชีอยู่แล้ว? เข้าสู่ระบบ
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Form validation
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        const pdpaCheckbox = document.getElementById('accept_pdpa');
+        if (!pdpaCheckbox.checked) {
+            e.preventDefault();
+            alert('กรุณายอมรับนโยบายความเป็นส่วนตัวและการคุ้มครองข้อมูลส่วนบุคคล (PDPA) ก่อนสมัครสมาชิก');
+            pdpaCheckbox.focus();
+            return false;
+        }
+        
+        const password1 = document.getElementById('id_password1').value;
+        const password2 = document.getElementById('id_password2').value;
+        
+        if (password1 !== password2) {
+            e.preventDefault();
+            alert('รหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง');
+            document.getElementById('id_password2').focus();
+            return false;
+        }
+        
+        if (password1.length < 8) {
+            e.preventDefault();
+            alert('รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร');
+            document.getElementById('id_password1').focus();
+            return false;
+        }
+    });
+    
+    // Set max date for birthdate (must be at least 1 year old)
+    const today = new Date();
+    const maxDate = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+    const minDate = new Date(today.getFullYear() - 120, today.getMonth(), today.getDate());
+    document.getElementById('id_birthdate').max = maxDate.toISOString().split('T')[0];
+    document.getElementById('id_birthdate').min = minDate.toISOString().split('T')[0];
+</script>
+{% endblock %}

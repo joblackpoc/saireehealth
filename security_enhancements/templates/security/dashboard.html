@@ -1,0 +1,200 @@
+# ============================================================================
+# SECURITY DASHBOARD TEMPLATE
+# ============================================================================
+
+DASHBOARD_TEMPLATE = """
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div class="security-dashboard">
+    <h1>Security Monitoring Dashboard</h1>
+    
+    <div class="dashboard-summary">
+        <div class="metric-card critical">
+            <h3>Critical Events</h3>
+            <div class="metric-value">{{ dashboard_data.summary.critical_events }}</div>
+        </div>
+        <div class="metric-card high">
+            <h3>High Priority</h3>
+            <div class="metric-value">{{ dashboard_data.summary.high_events }}</div>
+        </div>
+        <div class="metric-card">
+            <h3>Total Events (24h)</h3>
+            <div class="metric-value">{{ dashboard_data.summary.total_events_24h }}</div>
+        </div>
+        <div class="metric-card">
+            <h3>Blocked IPs</h3>
+            <div class="metric-value">{{ dashboard_data.summary.blocked_ips }}</div>
+        </div>
+    </div>
+    
+    <div class="dashboard-charts">
+        <div class="chart-container">
+            <h2>Top Attack Types</h2>
+            <table class="attack-table">
+                <thead>
+                    <tr>
+                        <th>Attack Type</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attack, count in dashboard_data.top_attacks %}
+                    <tr>
+                        <td>{{ attack }}</td>
+                        <td>{{ count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="chart-container">
+            <h2>Top Attacking IPs</h2>
+            <table class="ip-table">
+                <thead>
+                    <tr>
+                        <th>IP Address</th>
+                        <th>Attempts</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ip, count in dashboard_data.top_attacking_ips %}
+                    <tr>
+                        <td>{{ ip }}</td>
+                        <td>{{ count }}</td>
+                        <td>
+                            <button onclick="blockIP('{{ ip }}')">Block</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="recent-events">
+        <h2>Recent Security Events</h2>
+        <div id="events-list">
+            <!-- Events will be loaded via AJAX -->
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-summary {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.metric-card {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.metric-card.critical {
+    background: #fee;
+    border-color: #dc3545;
+}
+
+.metric-card.high {
+    background: #fff3cd;
+    border-color: #ffc107;
+}
+
+.metric-value {
+    font-size: 36px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.dashboard-charts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.chart-container {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+button {
+    padding: 5px 10px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #c82333;
+}
+</style>
+
+<script>
+function blockIP(ip) {
+    if (confirm('Block IP: ' + ip + '?')) {
+        fetch('/admin/security/block-ip/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: 'ip=' + ip
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            location.reload();
+        });
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Auto-refresh events every 30 seconds
+setInterval(() => {
+    fetch('/admin/security/events/')
+        .then(response => response.json())
+        .then(data => {
+            // Update events list
+            console.log('Events updated:', data.count);
+        });
+}, 30000);
+</script>
+{% endblock %}
+"""

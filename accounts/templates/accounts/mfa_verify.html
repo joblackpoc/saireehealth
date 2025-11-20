@@ -1,0 +1,60 @@
+<!-- ================================ -->
+<!-- MFA VERIFY PAGE -->
+<!-- ================================ -->
+
+{% extends 'base.html' %}
+
+{% block title %}ยืนยัน MFA - Health Progress{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-lg">
+            <div class="card-header text-center bg-primary text-white">
+                <i class="bi bi-shield-lock-fill" style="font-size: 4rem;"></i>
+                <h3 class="mb-0 mt-3">ยืนยันตัวตนด้วย MFA</h3>
+            </div>
+            <div class="card-body text-center p-4">
+                <p class="mb-4" style="font-size: 1.25rem;">
+                    กรุณากรอกรหัส 6 หลักจาก<br>
+                    <strong class="text-primary">Google Authenticator</strong>
+                </p>
+                
+                <div class="alert alert-info shadow-sm mb-4">
+                    <i class="bi bi-person-fill"></i>
+                    <strong style="font-size: 1.125rem;">ผู้ใช้:</strong> 
+                    <span style="font-size: 1.25rem;">{{ username }}</span>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <input type="text" name="token" class="form-control text-center fw-bold" 
+                               style="font-size: 2.5rem; letter-spacing: 0.5rem; padding: 1.5rem; border: 3px solid #10b981;" 
+                               maxlength="6" pattern="[0-9]{6}" required placeholder="000000" autofocus>
+                        {% if form.token.errors %}
+                            <div class="alert alert-danger mt-3">{{ form.token.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg shadow-lg">
+                            <i class="bi bi-check-circle-fill"></i> ยืนยัน
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-4">
+                    <a href="{% url 'accounts:login' %}" class="text-decoration-none" style="font-size: 1.125rem;">
+                        <i class="bi bi-arrow-left-circle"></i> กลับไปหน้าเข้าสู่ระบบ
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert alert-warning mt-4 shadow-sm">
+            <i class="bi bi-info-circle-fill"></i>
+            <strong>คำแนะนำ:</strong> เปิดแอป Google Authenticator และกรอกรหัส 6 หลักที่แสดง
+        </div>
+    </div>
+</div>
+{% endblock %}

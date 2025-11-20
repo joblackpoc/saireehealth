@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+
+{% block title %}ยินดีต้อนรับสู่ Health Progress - ระบบติดตามสุขภาพ{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="row align-items-center mb-5">
+    <div class="col-lg-6 mb-4 mb-lg-0">
+        <h1 class="display-4 fw-bold text-success mb-4">
+            <i class="bi bi-heart-pulse-fill"></i> Health Progress
+        </h1>
+        <p class="lead mb-4" style="font-size: 1.5rem; line-height: 1.8;">
+            ระบบติดตามสุขภาพและความเจริญก้าวหน้าของคุณ<br>
+            <strong class="text-primary">เพื่อสุขภาพที่ดีขึ้นทุกวัน</strong>
+        </p>
+        <div class="d-grid gap-3 d-sm-flex">
+            <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-lg">
+                <i class="bi bi-person-plus-fill"></i> สมัครสมาชิกฟรี
+            </a>
+            <a href="{% url 'accounts:login' %}" class="btn btn-outline-success btn-lg">
+                <i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);">
+            <div class="card-body text-white p-5 text-center">
+                <i class="bi bi-graph-up-arrow" style="font-size: 8rem; opacity: 0.9;"></i>
+                <h3 class="mt-4 mb-3">ติดตามสุขภาพของคุณ</h3>
+                <p style="font-size: 1.25rem;">อย่างง่ายดายและมีประสิทธิภาพ</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="row mb-5">
+    <div class="col-12 text-center mb-5">
+        <h2 class="display-5 fw-bold text-success">
+            <i class="bi bi-stars"></i> ฟีเจอร์หลักของเรา
+        </h2>
+        <p class="lead">ทุกสิ่งที่คุณต้องการในการดูแลสุขภาพ</p>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body p-4">
+                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex p-4 mb-3">
+                    <i class="bi bi-graph-up text-success" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="card-title text-success mb-3">ติดตามค่าสุขภาพ</h4>
+                <p class="card-text" style="font-size: 1.125rem;">
+                    บันทึกและติดตามค่าสุขภาพสำคัญ เช่น BMI, ความดันโลหิต, ไขมัน, กล้ามเนื้อ และอื่นๆ
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body p-4">
+                <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex p-4 mb-3">
+                    <i class="bi bi-pie-chart-fill text-info" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="card-title text-info mb-3">กราฟและการวิเคราะห์</h4>
+                <p class="card-text" style="font-size: 1.125rem;">
+                    ดูกราฟแสดงการเปลี่ยนแปลงของค่าสุขภาพตลอดเวลา เพื่อเห็นความก้าวหน้าของคุณ
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body p-4">
+                <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex p-4 mb-3">
+                    <i class="bi bi-heart-pulse text-warning" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="card-title text-warning mb-3">คำแนะนำสุขภาพ</h4>
+                <p class="card-text" style="font-size: 1.125rem;">
+                    รับคำแนะนำเฉพาะบุคคลตามค่าสุขภาพของคุณ เพื่อสุขภาพที่ดีขึ้น
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body p-4">
+                <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex p-4 mb-3">
+                    <i class="bi bi-shield-check text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="card-title text-danger mb-3">ปลอดภัยและเป็นส่วนตัว</h4>
+                <p class="card-text" style="font-size: 1.125rem;">
+                    ข้อมูลของคุณได้รับการเข้ารหัสและปกป้องอย่างดี เป็นไปตาม PDPA
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body p-4">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex p-4 mb-3">
+                    <i class="bi bi-phone text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="card-title text-primary mb-3">ใช้งานบนมือถือ</h4>
+                <p class="card-text" style="font-size: 1.125rem;">
+                    ออกแบบมาสำหรับมือถือเป็นหลัก ใช้งานง่ายทุกที่ทุกเวลา
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 text-center">
+            <div class="card-body p-4">
+                <div class="bg-secondary bg-opacity-10 rounded-circle d-inline-flex p-4 mb-3">
+                    <i class="bi bi-clock-history text-secondary" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="card-title text-secondary mb-3">ประวัติครบถ้วน</h4>
+                <p class="card-text" style="font-size: 1.125rem;">
+                    เก็บประวัติการบันทึกข้อมูลทั้งหมด พร้อมเปรียบเทียบการเปลี่ยนแปลง
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Health Metrics Section -->
+<div class="card mb-5" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 3px solid #10b981;">
+    <div class="card-body p-5">
+        <div class="text-center mb-4">
+            <h2 class="display-5 fw-bold text-success mb-3">
+                <i class="bi bi-clipboard2-pulse"></i> ค่าสุขภาพที่ติดตามได้
+            </h2>
+            <p class="lead">ระบบรองรับการบันทึกค่าสุขภาพที่สำคัญทั้งหมด</p>
+        </div>
+        
+        <div class="row g-3">
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="alert alert-success text-center mb-0">
+                    <i class="bi bi-heart"></i><br><strong>ความดันโลหิต</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="alert alert-info text-center mb-0">
+                    <i class="bi bi-speedometer"></i><br><strong>BMI</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="alert alert-warning text-center mb-0">
+                    <i class="bi bi-percent"></i><br><strong>เปอร์เซ็นต์ไขมัน</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="alert alert-danger text-center mb-0">
+                    <i class="bi bi-droplet"></i><br><strong>ไขมันในช่องท้อง</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="alert alert-primary text-center mb-0">
+                    <i class="bi bi-diagram-3"></i><br><strong>กล้ามเนื้อ</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="alert alert-secondary text-center mb-0">
+                    <i class="bi bi-rulers"></i><br><strong>เส้นรอบเอว</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="alert alert-success text-center mb-0">
+                    <i class="bi bi-capsule"></i><br><strong>Cholesterol</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="alert alert-info text-center mb-0">
+                    <i class="bi bi-activity"></i><br><strong>LDL / HDL</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="alert alert-warning text-center mb-0">
+                    <i class="bi bi-thermometer"></i><br><strong>FBS</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="alert alert-danger text-center mb-0">
+                    <i class="bi bi-water"></i><br><strong>Triglycerides</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="alert alert-primary text-center mb-0">
+                    <i class="bi bi-fire"></i><br><strong>BMR</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="alert alert-secondary text-center mb-0">
+                    <i class="bi bi-hourglass"></i><br><strong>อายุร่างกาย</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PDPA Modal Trigger Button (for testing, hide in production) -->
+<div class="text-center mb-5">
+    <a href="{% url 'accounts:register' %}" class="btn btn-success btn-lg shadow-lg" style="padding: 1.25rem 3rem; font-size: 1.5rem;">
+        <i class="bi bi-person-plus-fill"></i> เริ่มใช้งานเลย - สมัครฟรี!
+    </a>
+</div>
+
+<!-- Why Choose Us Section -->
+<div class="card mb-5">
+    <div class="card-header text-center">
+        <h2 class="mb-0"><i class="bi bi-patch-check-fill"></i> ทำไมต้องเลือกเรา?</h2>
+    </div>
+    <div class="card-body p-5">
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="d-flex align-items-start">
+                    <div class="bg-success text-white rounded-circle p-3 me-3" style="min-width: 60px; min-height: 60px; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-check-lg" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h5 class="text-success mb-2">ใช้งานง่าย</h5>
+                        <p style="font-size: 1.125rem;">ออกแบบมาเพื่อผู้สูงอายุ ตัวอักษรใหญ่ ชัดเจน เข้าใจง่าย</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="d-flex align-items-start">
+                    <div class="bg-info text-white rounded-circle p-3 me-3" style="min-width: 60px; min-height: 60px; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-shield-fill-check" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h5 class="text-info mb-2">ปลอดภัย</h5>
+                        <p style="font-size: 1.125rem;">ระบบรักษาความปลอดภัยระดับสูง ข้อมูลเข้ารหัส</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="d-flex align-items-start">
+                    <div class="bg-warning text-white rounded-circle p-3 me-3" style="min-width: 60px; min-height: 60px; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-graph-up" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h5 class="text-warning mb-2">ติดตามความก้าวหน้า</h5>
+                        <p style="font-size: 1.125rem;">เห็นผลการเปลี่ยนแปลงอย่างชัดเจนด้วยกราฟ</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="d-flex align-items-start">
+                    <div class="bg-danger text-white rounded-circle p-3 me-3" style="min-width: 60px; min-height: 60px; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-gift-fill" style="font-size: 2rem;"></i>
+                    </div>
+                    <div>
+                        <h5 class="text-danger mb-2">ฟรี 100%</h5>
+                        <p style="font-size: 1.125rem;">ไม่มีค่าใช้จ่ายใดๆ ใช้งานได้ทุกฟีเจอร์</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="text-center py-5">
+    <h2 class="display-5 fw-bold text-success mb-4">พร้อมเริ่มต้นแล้วหรือยัง?</h2>
+    <p class="lead mb-4" style="font-size: 1.5rem;">เริ่มติดตามสุขภาพของคุณวันนี้</p>
+    <a href="{% url 'accounts:register' %}" class="btn btn-success btn-lg shadow-lg" style="padding: 1.25rem 3rem; font-size: 1.5rem;">
+        <i class="bi bi-rocket-takeoff-fill"></i> เริ่มใช้งานเลย!
+    </a>
+</div>
+{% endblock %}

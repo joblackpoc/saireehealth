@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}บันทึกข้อมูลสุขภาพ - Health Progress{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-11 col-lg-10">
+        <div class="card shadow-lg">
+            <div class="card-header text-center">
+                <h3 class="mb-0"><i class="bi bi-plus-circle-fill"></i> บันทึกข้อมูลสุขภาพ</h3>
+                <p class="mb-0 mt-2">กรอกข้อมูลสุขภาพของคุณในวันนี้</p>
+            </div>
+            <div class="card-body p-4">
+                <!-- User Info Alert -->
+                <div class="alert alert-success shadow-sm mb-4">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong><i class="bi bi-person-fill"></i> ชื่อ:</strong> {{ profile.firstname }} {{ profile.lastname }}
+                        </div>
+                        <div class="col-md-4">
+                            <strong><i class="bi bi-gender-ambiguous"></i> เพศ:</strong> {{ profile.get_gender_display }}
+                        </div>
+                        <div class="col-md-4">
+                            <strong><i class="bi bi-calendar-heart"></i> อายุ:</strong> {{ profile.age }} ปี
+                        </div>
+                        <div class="col-md-4 mt-2">
+                            <strong><i class="bi bi-telephone"></i> โทร:</strong> {{ profile.phone }}
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Blood Pressure Section -->
+                    <div class="card mb-4 border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0"><i class="bi bi-heart-pulse-fill"></i> ความดันโลหิต</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-arrow-up-circle"></i> ความดันบน (Systolic) <span class="text-danger">*</span></label>
+                                    {{ form.blood_pressure_systolic }}
+                                    <small class="form-text text-muted">หน่วย: mmHg</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-arrow-down-circle"></i> ความดันล่าง (Diastolic) <span class="text-danger">*</span></label>
+                                    {{ form.blood_pressure_diastolic }}
+                                    <small class="form-text text-muted">หน่วย: mmHg</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Body Measurements Section -->
+                    <div class="card mb-4 border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-rulers"></i> การวัดร่างกาย</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label"><i class="bi bi-arrows-vertical"></i> ส่วนสูง (cm) <span class="text-danger">*</span></label>
+                                    {{ form.height }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label"><i class="bi bi-speedometer"></i> น้ำหนัก (kg) <span class="text-danger">*</span></label>
+                                    {{ form.weight }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label"><i class="bi bi-hr"></i> เส้นรอบเอว (cm)</label>
+                                    {{ form.waist }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Blood Work Section -->
+                    <div class="card mb-4 border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="bi bi-droplet-fill"></i> ผลเลือด (ถ้ามี)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label"><i class="bi bi-capsule"></i> Cholesterol</label>
+                                    {{ form.cholesterol }}
+                                    <small class="form-text text-muted">mg/dL</small>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label"><i class="bi bi-bandaid"></i> LDL</label>
+                                    {{ form.ldl }}
+                                    <small class="form-text text-muted">mg/dL</small>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label"><i class="bi bi-shield-check"></i> HDL</label>
+                                    {{ form.hdl }}
+                                    <small class="form-text text-muted">mg/dL</small>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label"><i class="bi bi-thermometer-half"></i> FBS</label>
+                                    {{ form.fbs }}
+                                    <small class="form-text text-muted">mg/dL</small>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label"><i class="bi bi-water"></i> Triglycerides</label>
+                                    {{ form.triglycerides }}
+                                    <small class="form-text text-muted">mg/dL</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Body Composition Section -->
+                    <div class="card mb-4 border-success">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="bi bi-diagram-3-fill"></i> องค์ประกอบร่างกาย</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label"><i class="bi bi-calculator"></i> BMI</label>
+                                    {{ form.bmi }}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label"><i class="bi bi-percent"></i> เปอร์เซ็นต์ไขมัน</label>
+                                    {{ form.fat_percent }}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label"><i class="bi bi-droplet"></i> ไขมันในช่องท้อง</label>
+                                    {{ form.visceral_fat }}
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label"><i class="bi bi-graph-up"></i> เปอร์เซ็นต์กล้ามเนื้อ</label>
+                                    {{ form.muscle_percent }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Additional Info Section -->
+                    <div class="card mb-4 border-info">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="bi bi-info-circle-fill"></i> ข้อมูลเพิ่มเติม</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label"><i class="bi bi-fire"></i> BMR</label>
+                                    {{ form.bmr }}
+                                    <small class="form-text text-muted">อัตราการเผาผลาญพื้นฐาน</small>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label"><i class="bi bi-hourglass-split"></i> อายุร่างกาย</label>
+                                    {{ form.body_age }}
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label"><i class="bi bi-calendar-event"></i> วันที่บันทึก</label>
+                                    {{ form.recorded_at }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Buttons -->
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-success btn-lg shadow-lg">
+                            <i class="bi bi-save-fill"></i> บันทึกข้อมูล
+                        </button>
+                        <a href="{% url 'health_app:dashboard' %}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-arrow-left"></i> ยกเลิก
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Set default date to today
+    const dateInput = document.querySelector('input[name="recorded_at"]');
+    if (dateInput && !dateInput.value) {
+        const today = new Date();
+        const dateString = today.toISOString().split('T')[0];
+        dateInput.value = dateString;
+    }
+</script>
+{% endblock %}

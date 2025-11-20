@@ -1,0 +1,119 @@
+import re
+import time
+from django.conf import settings
+from django.core.cache import cache
+from django.http import JsonResponse
+from django.utils.deprecation import MiddlewareMixin
+
+class SecurityHeadersMiddleware(MiddlewareMixin):
+    def process_response(self, request, response):
+        response.setdefault('X-Content-Type-Options', 'nosniff')
+        response.setdefault('X-Frame-Options', getattr(settings, 'X_FRAME_OPTIONS', 'DENY'))
+        response.setdefault('Referrer-Policy', 'no-referrer-when-downgrade')
+        response.setdefault('Permissions-Policy', 'geolocation=(), microphone=()')
+        csp = getattr(settings, 'CSP', '')
+        if csp:
+            response.setdefault('Content-Security-Policy', csp)
+        if not settings.DEBUG:
+            response.setdefault('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+        return response
+
+class InputValidationMiddleware(MiddlewareMixin):
+        def _suspicious(self, value):
+            if not value:
+                return False
+            suspicious_patterns = [
+                r"\b(select|union|insert|update|delete|drop|alter|create)\b",
+                r"[<>]",
+                r"\bjavascript:\b",
+                r"\b(alert|prompt|confirm)\b",
+                r"\b(eval|system|exec)\b",
+            ]
+            for p in suspicious_patterns:
+                if re.search(p, value, re.IGNORECASE):
+                    return True
+            return False
+
+        def process_request(self, request):
+            for d in (request.GET, request.POST):
+                for k, v in d.items():
+                    if isinstance(v, str) and self._suspicious(v):
+                        return JsonResponse({'error': 'Bad Request - suspicious input'}, status=400)
+                return None
+    
+class SQLInjectionProtectionMiddleware(MiddlewareMixin):
+    patterns = [
+        r"\b(or|and)\b\s+\d+=\d+",
+        r"\bUNION\b.*\bSELECT\b",
+        r";\s*--",
+        r"/\*.*\*/",
+    ]
+    def process_request(self, request):
+        payloads = []
+        payloads.extend([f"{k}={v}" for k,v in request.GET.items()])
+        payloads.extend([f"{k}={v}" for k,v in request.POST.items()])
+        for item in payloads:
+            for p in self.patterns:
+                if re.search(p, item, re.IGNORECASE):
+                    return JsonResponse({'error': 'Potential SQL injection detected'}, status=400)
+        return None
+    
+class XSSProtectionMiddleware(MiddlewareMixin):
+    script_re = re.compile(r'<\\s*script\\b', re.IGNORECASE)
+    def process_request(self, request):
+        for d in (request.GET, request.POST):
+            for k, v in d.items():
+                if isinstance(v, str) and self.script_re.search(v):
+                    return JsonResponse({'error': 'Potential XSS detected'}, status=400)
+        return None
+    
+class RateLimitMiddleware(MiddlewareMixin):
+    RATE = getattr(settings, 'RL_REQUESTS', 60)
+    PER = getattr(settings, 'RL_PERIOD', 60)
+
+    def _key(self, request):
+        ip = request.META.get('REMOTE_ADDR') or 'unknown'
+        return f"rl:{ip}"
+
+    def process_request(self, request):
+        key = self._key(request)
+        bucket = cache.get(key)
+        now = time.time()
+        if not bucket:
+            bucket = {'tokens': self.RATE, 'last': now}
+        elapsed = now - bucket['last']
+        refill = elapsed * (self.RATE / self.PER)
+        bucket['tokens'] = min(self.RATE, bucket['tokens'] + refill)
+        bucket['last'] = now
+        if bucket['tokens'] >= 1:
+            bucket['tokens'] -= 1
+            cache.set(key, bucket, timeout=self.PER*2)
+            return None
+        else:
+                    return JsonResponse({'error': 'Too Many Requests'}, status=429)
+    
+class FileUploadSecurityMiddleware(MiddlewareMixin):
+    ALLOWED_FILE_EXT = getattr(settings, 'ALLOWED_FILE_EXT', ['.png', '.jpg', '.jpeg', '.pdf'])
+    MAX_UPLOAD_SIZE = getattr(settings, 'MAX_UPLOAD_SIZE', 5 * 1024 * 1024)
+    def process_request(self, request):
+        if request.method in ('POST', 'PUT') and request.FILES:
+            for name, file in request.FILES.items():
+                fn = file.name
+                if '..' in fn or '\\\\' in fn or fn.startswith('/'):
+                    return JsonResponse({'error': 'Invalid filename'}, status=400)
+                ext = '.' + fn.rsplit('.', 1)[-1].lower() if '.' in fn else ''
+                ext = '.' + fn.rsplit('.', 1)[-1].lower() if '.' in fn else ''
+                if ext not in self.ALLOWED_FILE_EXT:
+                    return JsonResponse({'error': 'Forbidden file type'}, status=400)
+                if file.size > self.MAX_UPLOAD_SIZE:
+                    return JsonResponse({'error': 'File too large'}, status=400)
+        return None
+    
+class XXEProtectionMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        ct = request.META.get('CONTENT_TYPE', '')
+        if 'xml' in ct:
+            body = request.body.decode('utf-8', errors='ignore')[:1000]
+            if '<!ENTITY' in body or 'SYSTEM' in body:
+                return JsonResponse({'error': 'Forbidden XML content'}, status=400)
+        return None

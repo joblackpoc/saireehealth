@@ -1,0 +1,526 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Health Progress Tracking{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+    <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+    <!-- Fallback favicon paths -->
+    <link rel="icon" href="{% static 'images/favicon/favicon.ico' %}" type="image/x-icon">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Google Fonts - Larger, Clear Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #10b981;
+            --primary-dark: #059669;
+            --primary-light: #6ee7b7;
+            --secondary-color: #14b8a6;
+            --success-color: #22c55e;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --light-bg: #f0fdf4;
+            --card-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+            --card-hover-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+        }
+        
+        * {
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            min-height: 100vh;
+            font-size: 1.125rem;
+            line-height: 1.7;
+            padding-bottom: 80px;
+        }
+        
+        /* Large, Readable Text for 50+ Users */
+        .lead {
+            font-size: 1.5rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        h2 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        h3 {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+        
+        h4 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        h5 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        p, .form-label, .form-control, .btn {
+            font-size: 1.125rem;
+        }
+        
+        /* Navigation */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+            padding: 1rem 0;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.75rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            font-size: 1.125rem;
+            padding: 0.75rem 1.25rem !important;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin: 0 0.25rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        
+        .navbar-toggler {
+            padding: 0.75rem;
+            font-size: 1.5rem;
+        }
+        
+        /* Cards */
+        .card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            background: white;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-hover-shadow);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border-radius: 20px 20px 0 0 !important;
+            font-weight: 600;
+            padding: 1.25rem 1.5rem;
+            font-size: 1.375rem;
+        }
+        
+        .card-body {
+            padding: 1.75rem;
+        }
+        
+        /* Buttons */
+        .btn {
+            border-radius: 12px;
+            padding: 0.875rem 2rem;
+            font-weight: 600;
+            font-size: 1.125rem;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            min-height: 50px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color) 0%, var(--primary-color) 100%);
+        }
+        
+        .btn-lg {
+            padding: 1.125rem 2.5rem;
+            font-size: 1.375rem;
+            min-height: 60px;
+        }
+        
+        .btn-sm {
+            padding: 0.625rem 1.25rem;
+            font-size: 1rem;
+            min-height: 40px;
+        }
+        
+        /* Forms */
+        .form-control, .form-select {
+            border-radius: 12px;
+            border: 2px solid #d1fae5;
+            padding: 1rem 1.25rem;
+            font-size: 1.125rem;
+            transition: all 0.3s ease;
+            min-height: 55px;
+            background: white;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25);
+            background: white;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #065f46;
+            font-size: 1.125rem;
+        }
+        
+        /* Alerts */
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 1.25rem 1.5rem;
+            font-size: 1.125rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .alert i {
+            font-size: 1.5rem;
+            margin-right: 0.75rem;
+        }
+        
+        /* Health Metric Cards */
+        .metric-card {
+            border-radius: 20px;
+            padding: 1.75rem;
+            color: white;
+            text-align: center;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+        }
+        
+        .metric-card h6 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            opacity: 0.95;
+        }
+        
+        .metric-card h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+        
+        .metric-card p {
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-card small {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        /* Badge */
+        .badge {
+            padding: 0.625rem 1.25rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        /* Table */
+        .table {
+            font-size: 1.125rem;
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, var(--primary-light) 0%, #d1fae5 100%);
+            color: #065f46;
+            font-weight: 700;
+            border: none;
+            padding: 1rem;
+            font-size: 1.125rem;
+        }
+        
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: #f0fdf4;
+        }
+        
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+            color: white;
+            padding: 1.5rem 0;
+            margin-top: 3rem;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .footer p {
+            font-size: 1rem;
+        }
+        
+        /* Status Colors */
+        .bg-status-normal {
+            background: linear-gradient(135deg, var(--success-color) 0%, var(--primary-color) 100%);
+        }
+        
+        .bg-status-warning {
+            background: linear-gradient(135deg, var(--warning-color) 0%, #fbbf24 100%);
+        }
+        
+        .bg-status-danger {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+        }
+        
+        .bg-status-info {
+            background: linear-gradient(135deg, var(--info-color) 0%, #2563eb 100%);
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                font-size: 1.125rem;
+                padding-bottom: 60px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.75rem;
+            }
+            
+            h3 {
+                font-size: 1.5rem;
+            }
+            
+            .navbar-brand {
+                font-size: 1.5rem;
+            }
+            
+            .card {
+                margin-bottom: 1.25rem;
+            }
+            
+            .card-body {
+                padding: 1.25rem;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 0.75rem;
+                padding: 1rem 1.5rem;
+            }
+            
+            .metric-card h3 {
+                font-size: 2rem;
+            }
+            
+            .form-control, .form-select {
+                font-size: 1.125rem;
+            }
+            
+            .table {
+                font-size: 1rem;
+            }
+            
+            .navbar-collapse {
+                background: rgba(16, 185, 129, 0.95);
+                padding: 1rem;
+                border-radius: 12px;
+                margin-top: 1rem;
+            }
+        }
+        
+        /* Accessibility */
+        .btn:focus, .form-control:focus, .form-select:focus {
+            outline: 3px solid var(--warning-color);
+            outline-offset: 2px;
+        }
+        
+        /* Loading Spinner */
+        .spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(16, 185, 129, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .spinner-border {
+            width: 4rem;
+            height: 4rem;
+            border-width: 0.5rem;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% if user.is_authenticated %}{% url 'health_app:dashboard' %}{% else %}{% url 'accounts:login' %}{% endif %}">
+                <i class="bi bi-heart-pulse-fill"></i> Health Progress
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'health_app:dashboard' %}">
+                                <i class="bi bi-speedometer2"></i> แดชบอร์ด
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'health_app:add_metric' %}">
+                                <i class="bi bi-plus-circle"></i> เพิ่มข้อมูล
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'health_app:history' %}">
+                                <i class="bi bi-clock-history"></i> ประวัติ
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:profile' %}">
+                                <i class="bi bi-person-circle"></i> โปรไฟล์
+                            </a>
+                        </li>
+                        {% if user.profile.role in 'admin,superuser' %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="healthReportsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-clipboard-data"></i> รายงานสุขภาพ
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="healthReportsDropdown">
+                                <li><a class="dropdown-item" href="{% url 'health_app:health_report' %}">
+                                    <i class="bi bi-clipboard-data"></i> รายงานตัวชี้วัด
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'health_app:health_status_report' %}">
+                                    <i class="bi bi-clipboard-check"></i> รายงานสถานะสุขภาพ
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'health_app:admin_health_report' %}">
+                                    <i class="bi bi-graph-up"></i> รายงานผู้ดูแล (ครบครัน)
+                                </a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:admin_dashboard' %}">
+                                <i class="bi bi-shield-lock"></i> Admin
+                            </a>
+                        </li>
+                        {% endif %}
+                        <li class="nav-item">
+                            <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link nav-link" style="border:none; text-decoration: none;">
+                                    <i class="bi bi-box-arrow-right"></i> ออกจากระบบ
+                                </button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:login' %}">
+                                <i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'accounts:register' %}">
+                                <i class="bi bi-person-plus"></i> สมัครสมาชิก
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            <i class="bi bi-{% if message.tags == 'success' %}check-circle-fill{% elif message.tags == 'error' %}exclamation-circle-fill{% elif message.tags == 'warning' %}exclamation-triangle-fill{% else %}info-circle-fill{% endif %}"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="container mt-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer text-center mt-5">
+        <div class="container">
+            <p class="mb-0">&copy; 2025 Health Progress Tracking System. ระบบติดตามสุขภาพและความเจริญก้าวหน้า</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

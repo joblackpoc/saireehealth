@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}เข้าสู่ระบบ - Health Progress{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-lg">
+            <div class="card-header text-center">
+                <div class="mb-3">
+                    <i class="bi bi-heart-pulse-fill text-white" style="font-size: 4rem;"></i>
+                </div>
+                <h3 class="mb-0">เข้าสู่ระบบ</h3>
+                <p class="mb-0 mt-2" style="font-size: 1.125rem;">ยินดีต้อนรับกลับมา</p>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="username" class="form-label">
+                            <i class="bi bi-person-fill"></i> ชื่อผู้ใช้
+                        </label>
+                        <input type="text" class="form-control" id="username" name="username" required autofocus 
+                               placeholder="กรอกชื่อผู้ใช้">
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="form-label">
+                            <i class="bi bi-lock-fill"></i> รหัสผ่าน
+                        </label>
+                        <input type="password" class="form-control" id="password" name="password" required
+                               placeholder="กรอกรหัสผ่าน">
+                    </div>
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i> เข้าสู่ระบบ
+                        </button>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="text-center">
+                    <p class="mb-3">
+                        <a href="{% url 'accounts:password_reset' %}" class="text-decoration-none" style="font-size: 1.125rem;">
+                            <i class="bi bi-key-fill"></i> ลืมรหัสผ่าน?
+                        </a>
+                    </p>
+                    <p class="mb-0" style="font-size: 1.125rem;">
+                        ยังไม่มีบัญชี? 
+                        <a href="{% url 'accounts:register' %}" class="text-decoration-none fw-bold text-success">
+                            <i class="bi bi-person-plus-fill"></i> สมัครสมาชิก
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Info Card -->
+        <div class="card mt-4" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #10b981;">
+            <div class="card-body text-center p-4">
+                <i class="bi bi-info-circle-fill text-success" style="font-size: 3rem;"></i>
+                <h5 class="text-success mt-3 mb-3">ข้อมูลของคุณปลอดภัย</h5>
+                <p class="mb-0" style="font-size: 1.125rem;">
+                    ระบบของเราได้รับการรักษาความปลอดภัยระดับสูง<br>
+                    และเป็นไปตามมาตรฐาน PDPA
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

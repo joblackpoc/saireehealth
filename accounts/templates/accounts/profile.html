@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}โปรไฟล์ - Health Progress{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-12 mb-4">
+        <!-- Profile Card -->
+        <div class="card shadow-lg text-center">
+            <div class="card-body p-4">
+                {% if profile.profile_picture %}
+                    <img src="{{ profile.profile_picture.url }}" class="rounded-circle mb-3 shadow" 
+                         style="width: 180px; height: 180px; object-fit: cover; border: 5px solid #10b981;">
+                {% else %}
+                    <div class="rounded-circle bg-gradient d-inline-flex align-items-center justify-content-center mb-3 shadow" 
+                         style="width: 180px; height: 180px; background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%); border: 5px solid #fff;">
+                        <i class="bi bi-person-fill text-white" style="font-size: 5rem;"></i>
+                    </div>
+                {% endif %}
+                
+                <h3 class="fw-bold text-success">{{ profile.firstname }} {{ profile.lastname }}</h3>
+                <p class="text-muted mb-3" style="font-size: 1.25rem;">@{{ user.username }}</p>
+                
+                <span class="badge bg-{% if profile.role == 'superuser' %}danger{% elif profile.role == 'admin' %}warning{% else %}success{% endif %} mb-4"
+                      style="font-size: 1.125rem; padding: 0.75rem 1.5rem;">
+                    <i class="bi bi-{% if profile.role == 'superuser' %}shield-fill-check{% elif profile.role == 'admin' %}shield-lock{% else %}person-check{% endif %}"></i>
+                    {{ profile.get_role_display }}
+                </span>
+                
+                <!-- Age Display -->
+                <div class="mt-4">
+                    <h5 class="text-success mb-3">
+                        <i class="bi bi-calendar-heart"></i> อายุของคุณ
+                    </h5>
+                    {% if age_details %}
+                        <div class="row g-2 mb-3">
+                            <div class="col-4">
+                                <div class="metric-card bg-status-normal" style="padding: 1rem;">
+                                    <h4 class="mb-0">{{ age_details.years }}</h4>
+                                    <small>ปี</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="metric-card bg-status-info" style="padding: 1rem;">
+                                    <h4 class="mb-0">{{ age_details.months }}</h4>
+                                    <small>เดือน</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="metric-card bg-status-warning" style="padding: 1rem;">
+                                    <h4 class="mb-0">{{ age_details.days }}</h4>
+                                    <small>วัน</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-success mb-0" style="font-size: 1rem;">
+                            <strong>รวมทั้งหมด:</strong> {{ age_details.total_days }} วัน
+                        </div>
+                    {% else %}
+                        <p class="h4 text-primary">{{ profile.age }} ปี</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- MFA Warning Card -->
+        {% if mfa_warning %}
+        <div class="card mt-4 border-danger shadow-lg">
+            <div class="card-body text-center p-4" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;">
+                <i class="bi bi-exclamation-triangle-fill" style="font-size: 4rem;"></i>
+                <h4 class="mt-3 mb-3"><strong>ต้องตั้งค่า MFA!</strong></h4>
+                <p class="mb-3" style="font-size: 1.125rem;">
+                    บัญชีของคุณต้องเปิดใช้งานการยืนยันตัวตนแบบสองขั้นตอน (MFA) เพื่อความปลอดภัย
+                </p>
+                <p class="mb-4" style="font-size: 1.125rem;">
+                    <strong>กรุณาตั้งค่า MFA ก่อนใช้งานระบบ</strong>
+                </p>
+                <a href="{% url 'accounts:mfa_setup' %}" class="btn btn-light btn-lg w-100 shadow">
+                    <i class="bi bi-shield-lock-fill"></i> ตั้งค่า MFA เลย
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-lg-12">
+        <!-- Profile Incomplete Warning -->
+        {% if profile_incomplete %}
+        <div class="alert alert-danger shadow mb-4" style="font-size: 1.125rem;">
+            <h5 class="alert-heading">
+                <i class="bi bi-exclamation-triangle-fill"></i> โปรไฟล์ยังไม่สมบูรณ์!
+            </h5>
+            <p class="mb-0">
+                กรุณากรอกข้อมูลให้ครบถ้วน (ชื่อจริง นามสกุล เพศ อายุ/วันเกิด เบอร์โทรศัพท์) เพื่อใช้งานระบบ
+            </p>
+        </div>
+        {% endif %}
+        
+        <!-- Edit Profile Card -->
+        <div class="card shadow-lg">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="bi bi-pencil-square"></i> แก้ไขโปรไฟล์</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger mb-4">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <strong>เกิดข้อผิดพลาด:</strong>
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <strong>คำแนะนำ:</strong> กรุณากรอกข้อมูลให้ครบถ้วนเพื่อการใช้งานที่สมบูรณ์
+                    </div>
+                    
+                    <div class="row">
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-person-fill"></i> ชื่อจริง <span class="text-danger">*</span>
+                            </label>
+                            {{ form.firstname }}
+                            {% if form.firstname.errors %}
+                                <div class="text-danger mt-2">{{ form.firstname.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-person-fill"></i> นามสกุล <span class="text-danger">*</span>
+                            </label>
+                            {{ form.lastname }}
+                            {% if form.lastname.errors %}
+                                <div class="text-danger mt-2">{{ form.lastname.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% comment %} <div class="row"> {% endcomment %}
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-gender-ambiguous"></i> เพศ <span class="text-danger">*</span>
+                            </label>
+                            {{ form.gender }}
+                            {% if form.gender.errors %}
+                                <div class="text-danger mt-2">{{ form.gender.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-calendar-event"></i> วันเกิด
+                            </label>
+                            {{ form.birthdate }}
+                            <small class="form-text text-muted">ระบบจะคำนวณอายุอัตโนมัติ</small>
+                            {% if form.birthdate.errors %}
+                                <div class="text-danger mt-2">{{ form.birthdate.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-hash"></i> อายุ <span class="text-danger">*</span>
+                            </label>
+                            {{ form.age }}
+                            {% if form.age.errors %}
+                                <div class="text-danger mt-2">{{ form.age.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-telephone-fill"></i> เบอร์โทรศัพท์ <span class="text-danger">*</span>
+                            </label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                                <div class="text-danger mt-2">{{ form.phone.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-chat-heart-fill"></i> ชื่อเล่น
+                            </label>
+                            {{ form.nickname }}
+                            {% if form.nickname.errors %}
+                                <div class="text-danger mt-2">{{ form.nickname.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-camera-fill"></i> รูปโปรไฟล์
+                            </label>
+                            {{ form.profile_picture }}
+                            <small class="form-text text-muted">ขนาดไฟล์ไม่เกิน 2MB (รูปภาพเท่านั้น)</small>
+                            {% if form.profile_picture.errors %}
+                                <div class="text-danger mt-2">{{ form.profile_picture.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-save-fill"></i> บันทึกการเปลี่ยนแปลง
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Age Details Card -->
+        {% if age_details %}
+        <div class="card mt-4 shadow-lg" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 3px solid #10b981;">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-calendar-check-fill"></i> รายละเอียดอายุ</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                        <div class="text-center p-3 bg-white rounded-3 shadow-sm">
+                            <h2 class="text-success mb-2">{{ age_details.years }}</h2>
+                            <p class="mb-0 text-muted"><strong>ปี</strong></p>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-center p-3 bg-white rounded-3 shadow-sm">
+                            <h2 class="text-info mb-2">{{ age_details.months }}</h2>
+                            <p class="mb-0 text-muted"><strong>เดือน</strong></p>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-center p-3 bg-white rounded-3 shadow-sm">
+                            <h2 class="text-warning mb-2">{{ age_details.days }}</h2>
+                            <p class="mb-0 text-muted"><strong>วัน</strong></p>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-center p-3 bg-white rounded-3 shadow-sm">
+                            <h2 class="text-danger mb-2">{{ age_details.total_days }}</h2>
+                            <p class="mb-0 text-muted"><strong>รวม (วัน)</strong></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-success mt-4 mb-0 shadow-sm">
+                    <i class="bi bi-info-circle-fill"></i> 
+                    <strong>อายุโดยละเอียด:</strong> {{ age_details.formatted }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

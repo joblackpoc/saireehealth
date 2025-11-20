@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}รายงานตัวชี้วัดสุขภาพ{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+    }
+    
+    .results-card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .user-card {
+        border: none;
+        border-left: 4px solid #007bff;
+        transition: transform 0.2s;
+    }
+    
+    .user-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .status-badge {
+        font-size: 0.8em;
+        padding: 0.35em 0.65em;
+    }
+    
+    .export-btn {
+        background: linear-gradient(45deg, #28a745, #20c997);
+        border: none;
+        color: white;
+        transition: all 0.3s;
+    }
+    
+    .export-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(40,167,69,0.3);
+        color: white;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6 fw-bold text-primary">📊 รายงานตัวชี้วัดสุขภาพ</h1>
+                    <p class="text-muted mb-0">ค้นหาและส่งออกข้อมูลสุขภาพของผู้ใช้ตามเกณฑ์ที่กำหนด</p>
+                </div>
+                <div>
+                    <a href="{% url 'health_app:dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> กลับหน้าหลัก
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card filter-card">
+                <div class="card-header border-0">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-funnel"></i> กรองข้อมูล
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="row g-3">
+                        {% csrf_token %}
+                        
+                        <div class="col-md-4">
+                            <label for="{{ form.health_indicator.id_for_label }}" class="form-label">
+                                {{ form.health_indicator.label }}
+                            </label>
+                            {{ form.health_indicator }}
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label for="{{ form.min_value.id_for_label }}" class="form-label">
+                                {{ form.min_value.label }}
+                            </label>
+                            {{ form.min_value }}
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label for="{{ form.max_value.id_for_label }}" class="form-label">
+                                {{ form.max_value.label }}
+                            </label>
+                            {{ form.max_value }}
+                        </div>
+                        
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-light btn-lg w-100">
+                                <i class="bi bi-search"></i> ค้นหา
+                            </button>
+                        </div>
+                        
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ form.include_latest_only }}
+                                <label class="form-check-label" for="{{ form.include_latest_only.id_for_label }}">
+                                    {{ form.include_latest_only.label }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        {% if form.non_field_errors %}
+                            <div class="col-12">
+                                <div class="alert alert-danger">
+                                    {{ form.non_field_errors }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results -->
+    {% if filter_applied %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card results-card">
+                <div class="card-header bg-light border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-people"></i> ผลการค้นหา
+                            </h5>
+                            <small class="text-muted">พบ {{ total_users }} รายการ</small>
+                        </div>
+                        
+                        {% if filtered_users and export_url %}
+                        <div>
+                            <a href="{{ export_url }}" class="btn export-btn">
+                                <i class="bi bi-file-earmark-excel"></i> ส่งออก Excel
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    {% if filtered_users %}
+                        <div class="row">
+                            {% for user_data in filtered_users %}
+                            <div class="col-lg-6 col-xl-4 mb-3">
+                                <div class="card user-card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="avatar bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-person text-white"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="card-title mb-0">
+                                                    {{ user_data.profile.firstname }} {{ user_data.profile.lastname }}
+                                                </h6>
+                                                <small class="text-muted">{{ user_data.user.username }}</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="row text-center mb-3">
+                                            <div class="col-6">
+                                                <div class="text-muted small">เพศ</div>
+                                                <div class="fw-bold">
+                                                    {% if user_data.profile.gender == 'male' %}ชาย{% else %}หญิง{% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="text-muted small">อายุ</div>
+                                                <div class="fw-bold">{{ user_data.profile.age }} ปี</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="text-center mb-2">
+                                            <div class="text-muted small">ค่าตัวชี้วัด</div>
+                                            <div class="h5 mb-1">{{ user_data.indicator_value }}</div>
+                                            {% if user_data.indicator_status %}
+                                            <span class="badge status-badge" style="background-color: {{ user_data.indicator_status.color }}; color: white;">
+                                                {{ user_data.indicator_status.text }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <div class="text-center">
+                                            <small class="text-muted">
+                                                <i class="bi bi-calendar"></i> 
+                                                {{ user_data.recorded_at|date:"d/m/Y H:i" }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% if filtered_users|length > 12 %}
+                        <div class="text-center mt-4">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> 
+                                แสดง {{ filtered_users|length }} รายการจากทั้งหมด {{ total_users }} รายการ
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-3">
+                                <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="text-muted">ไม่พบข้อมูลที่ตรงกับเงื่อนไขการค้นหา</h5>
+                            <p class="text-muted mb-0">ลองปรับเงื่อนไขการค้นหาใหม่</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Health indicator change handler to suggest appropriate ranges
+    const indicatorSelect = document.getElementById('{{ form.health_indicator.id_for_label }}');
+    const minInput = document.getElementById('{{ form.min_value.id_for_label }}');
+    const maxInput = document.getElementById('{{ form.max_value.id_for_label }}');
+    
+    const suggestedRanges = {
+        'bmi': { min: 18.5, max: 25.0 },
+        'blood_pressure_systolic': { min: 90, max: 140 },
+        'blood_pressure_diastolic': { min: 60, max: 90 },
+        'fat_percent': { min: 10, max: 30 },
+        'visceral_fat': { min: 1, max: 15 },
+        'muscle_percent': { min: 25, max: 45 },
+        'waist': { min: 60, max: 100 },
+        'cholesterol': { min: 150, max: 250 },
+        'ldl': { min: 70, max: 150 },
+        'hdl': { min: 35, max: 80 },
+        'fbs': { min: 70, max: 126 },
+        'triglycerides': { min: 50, max: 200 },
+        'height': { min: 140, max: 190 },
+        'weight': { min: 40, max: 120 },
+        'bmr': { min: 1000, max: 2500 },
+        'body_age': { min: 18, max: 80 }
+    };
+    
+    indicatorSelect.addEventListener('change', function() {
+        const selectedIndicator = this.value;
+        if (suggestedRanges[selectedIndicator]) {
+            const range = suggestedRanges[selectedIndicator];
+            minInput.placeholder = `แนะนำ: ${range.min}`;
+            maxInput.placeholder = `แนะนำ: ${range.max}`;
+        }
+    });
+    
+    // Trigger change event on page load
+    indicatorSelect.dispatchEvent(new Event('change'));
+});
+</script>
+{% endblock %}

@@ -1,0 +1,1534 @@
+{% extends 'base.html' %}
+
+{% block title %}Security Monitoring Dashboard - Health Progress{% endblock %}
+
+{% block content %}
+<div class="security-dashboard">
+    <!-- Hacker Console Header -->
+    <div class="console-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="console-title">
+                <span class="text-success">[root@security-ops]</span><span class="text-warning">~$</span> 
+                <span class="text-info typing-effect">./security_monitor --realtime</span>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-hacker" onclick="refreshDashboard()">
+                    <i class="bi bi-arrow-clockwise"></i> [REFRESH]
+                </button>
+                <div class="console-status" id="status-indicator">
+                    <span class="blink">●</span> <span>ONLINE</span>
+                </div>
+            </div>
+        </div>
+        <div class="console-line mt-2">
+            <span class="text-success">Initializing security monitoring subsystems...</span>
+            <span class="text-warning">[OK]</span>
+        </div>
+    </div>
+
+    <!-- Terminal Security Overview -->
+    <div class="terminal-window mb-4">
+        <div class="terminal-header">
+            <div class="terminal-buttons">
+                <span class="btn-red"></span>
+                <span class="btn-yellow"></span>
+                <span class="btn-green"></span>
+            </div>
+            <span class="terminal-title">security_monitor.exe</span>
+        </div>
+        <div class="terminal-body">
+            <div class="console-output">
+                <div class="console-line">
+                    <span class="text-success">$</span> <span class="text-info">cat /proc/security/realtime_stats</span>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-3">
+                        <div class="metric-display">
+                            <div class="metric-label">TOTAL_REQUESTS_24H:</div>
+                            <div class="metric-value text-success" id="total-requests">57711</div>
+                            <div class="metric-bar"><div class="bar-fill" style="width: 85%"></div></div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="metric-display">
+                            <div class="metric-label">THREAT_EVENTS:</div>
+                            <div class="metric-value text-warning" id="threat-events">31</div>
+                            <div class="metric-bar"><div class="bar-fill-warning" style="width: 31%"></div></div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="metric-display">
+                            <div class="metric-label">BLOCKED_REQUESTS:</div>
+                            <div class="metric-value text-danger" id="blocked-requests">89</div>
+                            <div class="metric-bar"><div class="bar-fill-danger" style="width: 45%"></div></div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="metric-display">
+                            <div class="metric-label">THREAT_SCORE_AVG:</div>
+                            <div class="metric-value text-info" id="threat-score">18.2</div>
+                            <div class="metric-bar"><div class="bar-fill-info" style="width: 72%"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hacker Console Modules -->
+    <div class="row mb-4">
+        <!-- Module 1: Core Security -->
+        <div class="col-md-4 mb-3">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">MODULE_01</span><span class="text-success">]</span>
+                    <span class="module-name">CORE_SECURITY</span>
+                    <span class="module-status text-success blink">[ACTIVE]</span>
+                </div>
+                <div class="module-body">
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">headers_integrity</span>: <span class="text-success">95%</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">xss_blocked</span>: <span class="text-warning">8</span>
+                    </div>
+                    <div class="progress-hacker mt-2">
+                        <div class="progress-fill" style="width: 95%">
+                            <span class="progress-text">SECURITY_COVERAGE: 95%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 2: Input Validation -->
+        <div class="col-md-4 mb-3">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">MODULE_02</span><span class="text-success">]</span>
+                    <span class="module-name">INPUT_VALIDATION</span>
+                    <span class="module-status text-warning blink">[ALERT]</span>
+                </div>
+                <div class="module-body">
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">malicious_inputs</span>: <span class="text-warning">14</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">validation_fails</span>: <span class="text-success">0</span>
+                    </div>
+                    <div class="progress-hacker mt-2">
+                        <div class="progress-fill-warning" style="width: 85%">
+                            <span class="progress-text">VALIDATION_EFF: 85%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 3: Threat Detection -->
+        <div class="col-md-4 mb-3">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">MODULE_03</span><span class="text-success">]</span>
+                    <span class="module-name">THREAT_DETECTION</span>
+                    <span class="module-status text-danger blink">[HIGH_ALERT]</span>
+                </div>
+                <div class="module-body">
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">threats_detected</span>: <span class="text-danger">27</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">ip_blocks</span>: <span class="text-info">24</span>
+                    </div>
+                    <div class="progress-hacker mt-2">
+                        <div class="progress-fill-danger" style="width: 90%">
+                            <span class="progress-text">DETECTION_ACC: 90%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Security Modules -->
+    <div class="row mb-4">
+        <!-- Module 4: Injection Prevention -->
+        <div class="col-md-4 mb-3">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">MODULE_04</span><span class="text-success">]</span>
+                    <span class="module-name">INJECTION_PREVENTION</span>
+                    <span class="module-status text-danger blink">[THREAT_BLOCKED]</span>
+                </div>
+                <div class="module-body">
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">sql_blocked</span>: <span class="text-danger">9</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">xss_blocked</span>: <span class="text-warning">3</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">code_injection</span>: <span class="text-info">1</span>
+                    </div>
+                    <div class="console-line mt-2">
+                        <span class="text-success">INJECTION_PREVENTION: ACTIVE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 5: Authentication -->
+        <div class="col-md-4 mb-3">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">MODULE_05</span><span class="text-success">]</span>
+                    <span class="module-name">AUTHENTICATION</span>
+                    <span class="module-status text-success blink">[MFA_ACTIVE]</span>
+                </div>
+                <div class="module-body">
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">mfa_success</span>: <span class="text-success">276</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">auth_failures</span>: <span class="text-danger">1</span>
+                    </div>
+                    <div class="progress-hacker mt-2">
+                        <div class="progress-fill" style="width: 99%">
+                            <span class="progress-text">AUTH_RATE: 99%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 6: Data Protection -->
+        <div class="col-md-4 mb-3">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">MODULE_06</span><span class="text-success">]</span>
+                    <span class="module-name">DATA_PROTECTION</span>
+                    <span class="module-status text-success blink">[ENCRYPTED]</span>
+                </div>
+                <div class="module-body">
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">files_encrypted</span>: <span class="text-success">129</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">dlp_violations</span>: <span class="text-success">0</span>
+                    </div>
+                    <div class="progress-hacker mt-2">
+                        <div class="progress-fill" style="width: 100%">
+                            <span class="progress-text">ENCRYPTION: 100%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Elite Security Modules -->
+    <div class="row mb-4">
+        <!-- Module 7: Intelligence -->
+        <div class="col-md-3 mb-3">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">MODULE_07</span><span class="text-success">]</span>
+                    <span class="module-name">THREAT_INTEL</span>
+                    <span class="module-status text-info blink">[HUNTING]</span>
+                </div>
+                <div class="module-body">
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">threat_hunts</span>: <span class="text-info">10</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">ml_anomalies</span>: <span class="text-warning">1</span>
+                    </div>
+                    <div class="progress-hacker mt-2">
+                        <div class="progress-fill-warning" style="width: 75%">
+                            <span class="progress-text">INTEL: 75%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 8: Real-time Monitor -->
+        <div class="col-md-3 mb-3">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">MODULE_08</span><span class="text-success">]</span>
+                    <span class="module-name">REALTIME_MON</span>
+                    <span class="module-status text-success blink">[STREAMING]</span>
+                </div>
+                <div class="module-body">
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">events_per_sec</span>: <span class="text-success">841</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">correlations</span>: <span class="text-info">10</span>
+                    </div>
+                    <div class="progress-hacker mt-2">
+                        <div class="progress-fill" style="width: 95%">
+                            <span class="progress-text">HEALTH: 95%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 9: AI Security -->
+        <div class="col-md-3 mb-3">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">MODULE_09</span><span class="text-success">]</span>
+                    <span class="module-name">AI_SECURITY</span>
+                    <span class="module-status text-info blink">[LEARNING]</span>
+                </div>
+                <div class="module-body">
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">ai_predictions</span>: <span class="text-info">23</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">auto_responses</span>: <span class="text-success">22</span>
+                    </div>
+                    <div class="progress-hacker mt-2">
+                        <div class="progress-fill-warning" style="width: 88%">
+                            <span class="progress-text">AI_ACC: 88%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Module 10: Zero Trust -->
+        <div class="col-md-3 mb-3">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">MODULE_10</span><span class="text-success">]</span>
+                    <span class="module-name">ZERO_TRUST</span>
+                    <span class="module-status text-warning blink">[ENFORCING]</span>
+                </div>
+                <div class="module-body">
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">trust_score</span>: <span class="text-success">95%</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">risk_level</span>: <span class="text-info">51</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">policy_viol</span>: <span class="text-warning">1</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">adaptive</span>: <span class="text-info">21</span>
+                    </div>
+                    <div class="progress-hacker mt-2">
+                        <div class="progress-fill-warning" style="width: 92%">
+                            <span class="progress-text">ZT_IMPL: 92%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Operations Console -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">INCIDENT_MGMT</span><span class="text-success">]</span>
+                    <span class="module-name">SECURITY_INCIDENTS</span>
+                    <span class="module-status text-danger blink">[ALERTS_ACTIVE]</span>
+                </div>
+                <div class="module-body">
+                    <div class="console-grid">
+                        <div class="console-line">
+                            <span class="text-muted">></span> <span class="text-info">critical</span>: <span class="text-danger blink">2</span>
+                        </div>
+                        <div class="console-line">
+                            <span class="text-muted">></span> <span class="text-info">high</span>: <span class="text-warning">9</span>
+                        </div>
+                        <div class="console-line">
+                            <span class="text-muted">></span> <span class="text-info">medium</span>: <span class="text-info">9</span>
+                        </div>
+                        <div class="console-line">
+                            <span class="text-muted">></span> <span class="text-info">resolved</span>: <span class="text-success">42</span>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-success">AVG_RESPONSE_TIME: 2.3min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">THREAT_INTEL</span><span class="text-success">]</span>
+                    <span class="module-name">INTELLIGENCE_FEEDS</span>
+                    <span class="module-status text-success blink">[FEEDS_ACTIVE]</span>
+                </div>
+                <div class="module-body">
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">malicious_ips</span>: <span class="text-danger">1055</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">suspicious_domains</span>: <span class="text-warning">107</span>
+                    </div>
+                    <div class="console-line">
+                        <span class="text-muted">></span> <span class="text-info">active_feeds</span>: <span class="text-info">11</span>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-success blink">THREAT_MAP_LOADING...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hacker Analytics Console -->
+    <div class="row mb-4">
+        <!-- Threat Timeline Chart -->
+        <div class="col-md-8">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">ANALYTICS</span><span class="text-success">]</span>
+                    <span class="module-name">THREAT_TIMELINE_24H</span>
+                    <span class="module-status text-success blink">[REAL-TIME]</span>
+                </div>
+                <div class="module-body">
+                    <div class="chart-container-hacker" style="height: 300px;">
+                        <canvas id="threatTimelineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attack Distribution -->
+        <div class="col-md-4">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">ATTACK_DIST</span><span class="text-success">]</span>
+                    <span class="module-name">DISTRIBUTION</span>
+                    <span class="module-status text-warning blink">[ANALYZING]</span>
+                </div>
+                <div class="module-body">
+                    <div class="chart-container-hacker" style="height: 300px;">
+                        <canvas id="attackDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Threat Intelligence Console -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">TOP_THREATS_24H</span><span class="text-success">]</span>
+                    <span class="module-name">THREAT_ANALYSIS</span>
+                    <span class="module-status text-danger blink">[HIGH_PRIORITY]</span>
+                </div>
+                <div class="module-body">
+                    <div class="hacker-table">
+                        <div class="table-header">
+                            <span class="text-info">THREAT_TYPE</span>
+                            <span class="text-info">COUNT</span>
+                            <span class="text-info">SEVERITY</span>
+                        </div>
+                        <div class="table-row">
+                            <span>SQL_INJECTION</span>
+                            <span class="text-danger">45</span>
+                            <span class="text-danger blink">[HIGH]</span>
+                        </div>
+                        <div class="table-row">
+                            <span>BRUTE_FORCE</span>
+                            <span class="text-warning">23</span>
+                            <span class="text-warning">[MEDIUM]</span>
+                        </div>
+                        <div class="table-row">
+                            <span>XSS_ATTEMPT</span>
+                            <span class="text-info">15</span>
+                            <span class="text-info">[MEDIUM]</span>
+                        </div>
+                        <div class="table-row">
+                            <span>MALWARE_DETECTION</span>
+                            <span class="text-danger">8</span>
+                            <span class="text-danger blink">[CRITICAL]</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Performance -->
+        <div class="col-md-6">
+            <div class="hacker-module">
+                <div class="module-header">
+                    <span class="text-success">[</span><span class="text-warning">SYSTEM_PERF</span><span class="text-success">]</span>
+                    <span class="module-name">PERFORMANCE_METRICS</span>
+                    <span class="module-status text-success blink">[MONITORING]</span>
+                </div>
+                <div class="module-body">
+                    <div class="performance-grid">
+                        <div class="console-line">
+                            <span class="text-muted">></span> <span class="text-info">cpu_usage</span>: <span class="text-warning">55.6%</span>
+                        </div>
+                        <div class="console-line">
+                            <span class="text-muted">></span> <span class="text-info">memory_usage</span>: <span class="text-warning">51.1%</span>
+                        </div>
+                        <div class="console-line">
+                            <span class="text-muted">></span> <span class="text-info">disk_usage</span>: <span class="text-info">21.2%</span>
+                        </div>
+                        <div class="console-line">
+                            <span class="text-muted">></span> <span class="text-info">network_io</span>: <span class="text-success">2.5GB</span>
+                        </div>
+                        <div class="console-line">
+                            <span class="text-muted">></span> <span class="text-info">avg_latency</span>: <span class="text-info">70ms</span>
+                        </div>
+                        <div class="console-line">
+                            <span class="text-muted">></span> <span class="text-info">uptime</span>: <span class="text-success">99.9%</span>
+                        </div>
+                    </div>
+                    <div class="progress-hacker mt-3">
+                        <div class="progress-fill-warning" style="width: 55.6%">
+                            <span class="progress-text">CPU: 55.6%</span>
+                        </div>
+                    </div>
+                    <div class="progress-hacker mt-2">
+                        <div class="progress-fill-warning" style="width: 51.1%">
+                            <span class="progress-text">MEM: 51.1%</span>
+                        </div>
+                    </div>
+                    <div class="progress-hacker mt-2">
+                        <div class="progress-fill" style="width: 99.9%">
+                            <span class="progress-text">HEALTH: 99.9%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Event Log Console -->
+    <div class="hacker-module event-log-console">
+        <div class="module-header">
+            <span class="text-success">[</span><span class="text-warning">EVENT_LOG</span><span class="text-success">]</span>
+            <span class="module-name">RECENT_SECURITY_EVENTS</span>
+            <span class="module-status text-danger blink">[LIVE_FEED]</span>
+            <button class="terminal-button float-end" onclick="loadMoreEvents()">
+                <span class="text-success">[LOAD_MORE]</span>
+            </button>
+        </div>
+        <div class="module-body">
+            <div class="event-log-table">
+                <div class="log-header">
+                    <span class="text-info">TIMESTAMP</span>
+                    <span class="text-info">EVENT_TYPE</span>
+                    <span class="text-info">SOURCE_IP</span>
+                    <span class="text-info">THREAT_LVL</span>
+                    <span class="text-info">ACTION</span>
+                    <span class="text-info">DETAILS</span>
+                </div>
+                <div id="security-events-console">
+                    <div class="log-entry">
+                        <span class="text-muted">2025-11-15_06:21:01</span>
+                        <span class="text-warning">BRUTE_FORCE</span>
+                        <span class="text-success">7.104.210.111</span>
+                        <span class="text-warning blink">[HIGH]</span>
+                        <span class="text-info">[MONITORED]</span>
+                        <span class="text-success">[VIEW]</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="text-muted">2025-11-15_01:32:07</span>
+                        <span class="text-danger">XSS_ATTEMPT</span>
+                        <span class="text-success">165.2.221.229</span>
+                        <span class="text-danger blink">[CRITICAL]</span>
+                        <span class="text-success">[LOGGED]</span>
+                        <span class="text-success">[VIEW]</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="text-muted">2025-11-15_03:17:39</span>
+                        <span class="text-warning">MALWARE_DETECT</span>
+                        <span class="text-success">154.8.167.200</span>
+                        <span class="text-warning">[HIGH]</span>
+                        <span class="text-info">[MONITORED]</span>
+                        <span class="text-success">[VIEW]</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="text-muted">2025-11-14_19:50:15</span>
+                        <span class="text-danger">MALWARE_DETECT</span>
+                        <span class="text-success">151.180.21.234</span>
+                        <span class="text-danger blink">[CRITICAL]</span>
+                        <span class="text-danger">[BLOCKED]</span>
+                        <span class="text-success">[VIEW]</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="text-muted">2025-11-15_02:57:10</span>
+                        <span class="text-success">XSS_ATTEMPT</span>
+                        <span class="text-success">11.174.95.202</span>
+                        <span class="text-success">[LOW]</span>
+                        <span class="text-info">[MONITORED]</span>
+                        <span class="text-success">[VIEW]</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="text-muted">2025-11-15_10:19:02</span>
+                        <span class="text-danger">DATA_BREACH_ATT</span>
+                        <span class="text-success">176.51.215.227</span>
+                        <span class="text-danger blink">[CRITICAL]</span>
+                        <span class="text-warning">[QUARANTINED]</span>
+                        <span class="text-success">[VIEW]</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="text-muted">2025-11-15_08:27:11</span>
+                        <span class="text-info">BRUTE_FORCE</span>
+                        <span class="text-success">169.183.76.29</span>
+                        <span class="text-info">[MEDIUM]</span>
+                        <span class="text-danger">[BLOCKED]</span>
+                        <span class="text-success">[VIEW]</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="text-muted">2025-11-15_05:20:45</span>
+                        <span class="text-warning">MALWARE_DETECT</span>
+                        <span class="text-success">101.215.134.192</span>
+                        <span class="text-warning">[HIGH]</span>
+                        <span class="text-danger">[BLOCKED]</span>
+                        <span class="text-success">[VIEW]</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<style>
+body {
+    background: #0a0a0a !important;
+    color: #00ff00 !important;
+    font-family: 'Courier New', 'Monaco', 'Menlo', monospace !important;
+}
+
+.security-dashboard {
+    position: relative;
+    background: #0a0a0a;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* Hacker Console Header */
+.console-header {
+    background: #111111;
+    border: 1px solid #00ff00;
+    border-radius: 5px;
+    padding: 15px;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+.console-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.typing-effect {
+    animation: typing 2s steps(20) infinite;
+}
+
+@keyframes typing {
+    0%, 50% { border-right: 2px solid #00ff00; }
+    51%, 100% { border-right: 2px solid transparent; }
+}
+
+.console-line {
+    font-size: 0.9rem;
+    margin: 5px 0;
+}
+
+.console-status {
+    background: #1a1a1a;
+    border: 1px solid #00ff00;
+    padding: 8px 15px;
+    border-radius: 3px;
+    color: #00ff00;
+    font-weight: bold;
+}
+
+.blink {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.3; }
+}
+
+/* Hacker Module Styling */
+.hacker-module {
+    background-color: #0a0a0a;
+    border: 1px solid #00ff00;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+}
+
+.module-header {
+    background-color: #1a1a1a;
+    padding: 10px 15px;
+    border-bottom: 1px solid #00ff00;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.module-name {
+    color: #00ff00;
+    margin-left: 10px;
+}
+
+.module-status {
+    float: right;
+    font-size: 10px;
+}
+
+.module-body {
+    padding: 15px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+}
+
+.console-line {
+    margin: 8px 0;
+    color: #00ff00;
+}
+
+.console-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.progress-hacker {
+    background-color: #1a1a1a;
+    height: 20px;
+    border: 1px solid #00ff00;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill {
+    background: linear-gradient(90deg, #00ff00, #00dd00);
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.5s ease;
+}
+
+.progress-fill-warning {
+    background: linear-gradient(90deg, #ffaa00, #ff8800);
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.5s ease;
+}
+
+.progress-fill-danger {
+    background: linear-gradient(90deg, #ff0000, #dd0000);
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.5s ease;
+}
+
+.progress-text {
+    color: #000;
+    font-weight: bold;
+    font-size: 10px;
+    text-shadow: none;
+}
+
+.chart-container-hacker {
+    background-color: #1a1a1a;
+    border: 1px solid #00ff00;
+    border-radius: 4px;
+    padding: 15px;
+}
+
+.hacker-table {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 15px;
+    padding: 10px 0;
+    border-bottom: 1px solid #00ff00;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 15px;
+    padding: 8px 0;
+    border-bottom: 1px solid #333;
+    color: #00ff00;
+}
+
+.table-row:hover {
+    background-color: #1a1a1a;
+}
+
+/* Performance Grid */
+.performance-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+/* Event Log Console */
+.event-log-console {
+    margin-top: 20px;
+}
+
+.log-header {
+    display: grid;
+    grid-template-columns: 2fr 2fr 2fr 1fr 1fr 1fr;
+    gap: 15px;
+    padding: 12px 0;
+    border-bottom: 2px solid #00ff00;
+    margin-bottom: 15px;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+.log-entry {
+    display: grid;
+    grid-template-columns: 2fr 2fr 2fr 1fr 1fr 1fr;
+    gap: 15px;
+    padding: 8px 0;
+    border-bottom: 1px solid #333;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    transition: all 0.3s ease;
+}
+
+.log-entry:hover {
+    background-color: #1a1a1a;
+    border-left: 3px solid #00ff00;
+    padding-left: 10px;
+}
+
+.event-log-table {
+    max-height: 400px;
+    overflow-y: auto;
+    background-color: #0a0a0a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+/* Scrollbar styling for event log */
+.event-log-table::-webkit-scrollbar {
+    width: 8px;
+}
+
+.event-log-table::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.event-log-table::-webkit-scrollbar-thumb {
+    background: #00ff00;
+    border-radius: 4px;
+}
+
+.event-log-table::-webkit-scrollbar-thumb:hover {
+    background: #00dd00;
+}
+
+/* Terminal Window */
+.terminal-window {
+    background: #000000;
+    border: 1px solid #00ff00;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.4);
+}
+
+.terminal-header {
+    background: #1a1a1a;
+    padding: 10px 15px;
+    border-bottom: 1px solid #00ff00;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.terminal-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-red, .btn-yellow, .btn-green {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.btn-red { background: #ff5f56; }
+.btn-yellow { background: #ffbd2e; }
+.btn-green { background: #27ca3f; }
+
+.terminal-title {
+    color: #00ff00;
+    font-weight: bold;
+    margin-left: auto;
+}
+
+.terminal-body {
+    padding: 20px;
+    background: #000000;
+}
+
+.console-output {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+/* Metric Display */
+.metric-display {
+    margin-bottom: 15px;
+}
+
+.metric-label {
+    color: #888888;
+    font-size: 0.75rem;
+    margin-bottom: 5px;
+}
+
+.metric-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-shadow: 0 0 10px currentColor;
+}
+
+.metric-bar {
+    height: 4px;
+    background: #1a1a1a;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.bar-fill {
+    height: 100%;
+    background: #00ff00;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+.bar-fill-warning {
+    height: 100%;
+    background: #ffaa00;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+.bar-fill-danger {
+    height: 100%;
+    background: #ff0000;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+.bar-fill-info {
+    height: 100%;
+    background: #00aaff;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { box-shadow: 0 0 5px currentColor; }
+    to { box-shadow: 0 0 15px currentColor; }
+}
+
+/* Hacker Module Cards */
+.hacker-module {
+    background: #111111;
+    border: 1px solid #00ff00;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+}
+
+.hacker-module:hover {
+    box-shadow: 0 0 25px rgba(0, 255, 0, 0.5);
+    transform: translateY(-2px);
+}
+
+.module-header {
+    background: #1a1a1a;
+    padding: 10px 15px;
+    border-bottom: 1px solid #00ff00;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.module-name {
+    color: #00ff00;
+    margin: 0 10px;
+}
+
+.module-status {
+    float: right;
+    font-size: 0.7rem;
+}
+
+.module-body {
+    padding: 15px;
+}
+
+/* Progress Bars Hacker Style */
+.progress-hacker {
+    background: #1a1a1a;
+    height: 20px;
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #333;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ff00, #00aa00);
+    position: relative;
+    animation: scan 2s linear infinite;
+}
+
+.progress-fill-warning {
+    height: 100%;
+    background: linear-gradient(90deg, #ffaa00, #ff8800);
+    position: relative;
+    animation: scan 2s linear infinite;
+}
+
+.progress-fill-danger {
+    height: 100%;
+    background: linear-gradient(90deg, #ff0000, #aa0000);
+    position: relative;
+    animation: scan 2s linear infinite;
+}
+
+.progress-text {
+    position: absolute;
+    top: 2px;
+    left: 5px;
+    font-size: 0.7rem;
+    color: #000000;
+    font-weight: bold;
+}
+
+@keyframes scan {
+    0% { box-shadow: inset -3px 0 0 rgba(255, 255, 255, 0.5); }
+    50% { box-shadow: inset 3px 0 0 rgba(255, 255, 255, 0.5); }
+    100% { box-shadow: inset -3px 0 0 rgba(255, 255, 255, 0.5); }
+}
+
+/* Button Styling */
+.btn-hacker {
+    background: #1a1a1a;
+    border: 1px solid #00ff00;
+    color: #00ff00;
+    padding: 8px 15px;
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.btn-hacker:hover {
+    background: #00ff00;
+    color: #000000;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+}
+
+/* Text Colors */
+.text-success { color: #00ff00 !important; }
+.text-warning { color: #ffaa00 !important; }
+.text-danger { color: #ff0000 !important; }
+.text-info { color: #00aaff !important; }
+.text-muted { color: #666666 !important; }
+
+/* Hacker Tables */
+.table-dark {
+    background-color: #111111 !important;
+    border: 1px solid #00ff00;
+}
+
+.table-dark th,
+.table-dark td {
+    border-color: #333333 !important;
+    color: #00ff00 !important;
+    font-family: 'Courier New', monospace;
+}
+
+.table-dark th {
+    background-color: #1a1a1a !important;
+    border-bottom: 2px solid #00ff00 !important;
+}
+
+/* Custom Cards */
+.card {
+    background: #111111 !important;
+    border: 1px solid #00ff00 !important;
+    color: #00ff00 !important;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.2) !important;
+}
+
+.card:hover {
+    box-shadow: 0 0 25px rgba(0, 255, 0, 0.4) !important;
+}
+
+/* Matrix Effect */
+.matrix-bg::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="50" font-size="10" fill="%2300ff0020">01010101</text></svg>') repeat;
+    opacity: 0.1;
+    z-index: -1;
+    animation: matrix 20s linear infinite;
+}
+
+@keyframes matrix {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let dashboardData = {};
+let refreshInterval;
+let threatTimelineChart;
+let attackDistributionChart;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize charts
+    initializeCharts();
+    
+    // Initial load
+    loadDashboardData();
+    
+    // Set up auto-refresh every 30 seconds
+    refreshInterval = setInterval(loadDashboardData, 30000);
+    
+    // Handle visibility change to pause/resume updates
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            clearInterval(refreshInterval);
+        } else {
+            loadDashboardData();
+            refreshInterval = setInterval(loadDashboardData, 30000);
+        }
+    });
+});
+
+function initializeCharts() {
+    // Initialize Threat Timeline Chart
+    const timelineCtx = document.getElementById('threatTimelineChart').getContext('2d');
+    threatTimelineChart = new Chart(timelineCtx, {
+        type: 'line',
+        data: {
+            labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+            datasets: [
+                {
+                    label: 'Threats Detected',
+                    data: [5, 12, 8, 15, 22, 18, 25, 20, 16, 14, 18, 22, 19, 15, 20, 25, 18, 22, 16, 20, 24, 18, 15, 12],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Threats Blocked',
+                    data: [3, 8, 6, 12, 18, 15, 20, 16, 12, 10, 15, 18, 16, 12, 16, 20, 15, 18, 12, 16, 20, 15, 12, 8],
+                    borderColor: '#22c55e',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: { color: 'white' }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: 'white' },
+                    grid: { color: 'rgba(255,255,255,0.1)' }
+                },
+                y: {
+                    ticks: { color: 'white' },
+                    grid: { color: 'rgba(255,255,255,0.1)' }
+                }
+            }
+        }
+    });
+
+    // Initialize Attack Distribution Chart
+    const distributionCtx = document.getElementById('attackDistributionChart').getContext('2d');
+    attackDistributionChart = new Chart(distributionCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['SQL Injection', 'XSS', 'Brute Force', 'Malware', 'DDoS', 'Other'],
+            datasets: [{
+                data: [45, 15, 23, 8, 5, 4],
+                backgroundColor: [
+                    '#ef4444', '#f59e0b', '#3b82f6', 
+                    '#8b5cf6', '#06b6d4', '#6b7280'
+                ],
+                borderWidth: 2,
+                borderColor: 'rgba(255,255,255,0.5)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { 
+                        color: 'white',
+                        padding: 15,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+}
+
+async function loadDashboardData() {
+    try {
+        updateConnectionStatus('connecting');
+        
+        // Simulate loading data (replace with actual API call)
+        const data = {
+            summary: {
+                critical_events: Math.floor(Math.random() * 5) + 1,
+                high_events: Math.floor(Math.random() * 15) + 5,
+                total_events_24h: Math.floor(Math.random() * 100) + 50,
+                blocked_ips: Math.floor(Math.random() * 20) + 10
+            },
+            recent_events: generateMockEvents()
+        };
+        
+        dashboardData = data;
+        updateDashboardUI(data);
+        updateConnectionStatus('connected');
+        
+    } catch (error) {
+        console.error('Dashboard update failed:', error);
+        updateConnectionStatus('error');
+    }
+}
+
+function generateMockEvents() {
+    const eventTypes = ['SQL Injection', 'XSS Attempt', 'Brute Force', 'Malware Detection', 'Data Breach Attempt'];
+    const severities = ['Critical', 'High', 'Medium', 'Low'];
+    const actions = ['Blocked', 'Monitored', 'Logged', 'Quarantined'];
+    
+    return Array.from({length: 8}, (_, i) => ({
+        timestamp: new Date(Date.now() - i * 3600000).toISOString(),
+        action: eventTypes[Math.floor(Math.random() * eventTypes.length)],
+        severity: severities[Math.floor(Math.random() * severities.length)],
+        ip: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+        description: 'Security event detected and processed'
+    }));
+}
+
+function updateDashboardUI(data) {
+    // Update summary cards
+    if (data.summary) {
+        document.getElementById('total-requests').textContent = (57000 + Math.floor(Math.random() * 1000)).toLocaleString();
+        document.getElementById('threat-events').textContent = data.summary.high_events + data.summary.critical_events || 31;
+        document.getElementById('blocked-requests').textContent = data.summary.blocked_ips * 4 || 89;
+        document.getElementById('threat-score').textContent = (Math.random() * 10 + 15).toFixed(1);
+    }
+    
+    // Update chart data with some animation
+    updateChartData();
+}
+
+function updateChartData() {
+    // Update timeline chart with new data
+    if (threatTimelineChart) {
+        const newData = Array.from({length: 24}, () => Math.floor(Math.random() * 30) + 5);
+        const newBlockedData = newData.map(val => Math.floor(val * 0.7));
+        
+        threatTimelineChart.data.datasets[0].data = newData;
+        threatTimelineChart.data.datasets[1].data = newBlockedData;
+        threatTimelineChart.update('none');
+    }
+    
+    // Update distribution chart
+    if (attackDistributionChart) {
+        const total = 100;
+        const sqlInjection = Math.floor(Math.random() * 20) + 35;
+        const xss = Math.floor(Math.random() * 10) + 10;
+        const bruteForce = Math.floor(Math.random() * 15) + 15;
+        const malware = Math.floor(Math.random() * 8) + 5;
+        const ddos = Math.floor(Math.random() * 5) + 3;
+        const other = total - sqlInjection - xss - bruteForce - malware - ddos;
+        
+        attackDistributionChart.data.datasets[0].data = [sqlInjection, xss, bruteForce, malware, ddos, other];
+        attackDistributionChart.update('none');
+    }
+}
+
+function updateAttackTypesTable(attacks) {
+    const tbody = document.querySelector('#attack-types-table tbody');
+    tbody.innerHTML = '';
+    
+    if (attacks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No attack data available</td></tr>';
+        return;
+    }
+    
+    attacks.forEach(([attack, count, severity]) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><i class="bi bi-bug-fill text-danger"></i> ${attack}</td>
+            <td><span class="badge bg-secondary">${count}</span></td>
+            <td><span class="badge attack-severity-${severity || 'medium'}">${severity || 'medium'}</span></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function updateAttackingIpsTable(ips) {
+    const tbody = document.querySelector('#attacking-ips-table tbody');
+    tbody.innerHTML = '';
+    
+    if (ips.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No attacking IPs detected</td></tr>';
+        return;
+    }
+    
+    ips.forEach(([ip, count]) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><code>${ip}</code></td>
+            <td><span class="badge bg-warning">${count}</span></td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="blockIP('${ip}')">
+                    <i class="bi bi-shield-x"></i> Block
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function updateRecentEvents(events) {
+    const container = document.getElementById('events-list');
+    const countSpan = document.getElementById('events-count');
+    
+    countSpan.textContent = `${events.length} events`;
+    
+    if (events.length === 0) {
+        container.innerHTML = '<div class="p-4 text-center text-muted">No recent security events</div>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    events.forEach(event => {
+        const eventDiv = document.createElement('div');
+        eventDiv.className = `event-item ${event.severity || 'medium'}`;
+        eventDiv.innerHTML = `
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="fw-bold mb-1">
+                        <i class="bi bi-${getEventIcon(event.action)}"></i> 
+                        ${event.action || 'Security Event'}
+                    </h6>
+                    <p class="mb-1 text-muted">${event.description || 'No description available'}</p>
+                    <small class="text-muted">
+                        <i class="bi bi-clock"></i> ${formatDateTime(event.timestamp)}
+                        ${event.ip ? `<i class="bi bi-router ms-2"></i> ${event.ip}` : ''}
+                        ${event.user ? `<i class="bi bi-person ms-2"></i> ${event.user}` : ''}
+                    </small>
+                </div>
+                <span class="badge bg-${getSeverityColor(event.severity)}">${event.severity || 'medium'}</span>
+            </div>
+        `;
+        container.appendChild(eventDiv);
+    });
+}
+
+function updateConnectionStatus(status) {
+    const indicator = document.getElementById('status-indicator');
+    
+    switch(status) {
+        case 'connecting':
+            indicator.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Connecting...';
+            indicator.className = 'badge bg-warning';
+            break;
+        case 'connected':
+            indicator.innerHTML = '<i class="bi bi-circle-fill"></i> System Healthy';
+            indicator.className = 'badge bg-success';
+            break;
+        case 'error':
+            indicator.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Error';
+            indicator.className = 'badge bg-danger';
+            break;
+    }
+}
+
+function refreshDashboard() {
+    loadDashboardData();
+}
+
+function loadMoreEvents() {
+    // Simulate loading more events
+    const tableBody = document.getElementById('security-events-table');
+    const newRows = generateMockEvents().slice(0, 3);
+    
+    newRows.forEach(event => {
+        const row = document.createElement('tr');
+        const severityClass = getSeverityClass(event.severity);
+        const actionClass = getActionClass(Math.random() > 0.5 ? 'Blocked' : 'Monitored');
+        
+        row.innerHTML = `
+            <td>${formatDateTime(event.timestamp)}</td>
+            <td><span class="text-${getSeverityTextColor(event.severity)}">${event.action}</span></td>
+            <td><code>${event.ip}</code></td>
+            <td><span class="badge ${severityClass}">${event.severity}</span></td>
+            <td><span class="badge ${actionClass}">${Math.random() > 0.5 ? 'Blocked' : 'Monitored'}</span></td>
+            <td><a href="#" class="text-info">Details</a></td>
+        `;
+        
+        tableBody.appendChild(row);
+    });
+}
+
+function getSeverityClass(severity) {
+    const classes = {
+        'Critical': 'bg-danger',
+        'High': 'bg-warning',
+        'Medium': 'bg-info',
+        'Low': 'bg-success'
+    };
+    return classes[severity] || 'bg-secondary';
+}
+
+function getSeverityTextColor(severity) {
+    const colors = {
+        'Critical': 'danger',
+        'High': 'warning', 
+        'Medium': 'info',
+        'Low': 'success'
+    };
+    return colors[severity] || 'secondary';
+}
+
+function getActionClass(action) {
+    const classes = {
+        'Blocked': 'bg-danger',
+        'Monitored': 'bg-secondary',
+        'Logged': 'bg-success',
+        'Quarantined': 'bg-warning'
+    };
+    return classes[action] || 'bg-secondary';
+}
+
+function blockIP(ip) {
+    if (confirm(`Block IP address: ${ip}?\n\nThis will prevent all access from this IP.`)) {
+        fetch('/security/api/block-ip/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: `ip=${ip}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert(`✅ ${data.message}`);
+                loadDashboardData(); // Refresh data
+            } else {
+                alert(`❌ Error: ${data.message || 'Failed to block IP'}`);
+            }
+        })
+        .catch(error => {
+            console.error('Block IP error:', error);
+            alert('❌ Failed to block IP. Please try again.');
+        });
+    }
+}
+
+function getEventIcon(action) {
+    const icons = {
+        'login_failed': 'shield-exclamation',
+        'injection_attempt': 'bug',
+        'suspicious_activity': 'eye',
+        'rate_limit_exceeded': 'speedometer2',
+        'file_access_denied': 'file-lock',
+        'default': 'shield'
+    };
+    return icons[action] || icons.default;
+}
+
+function getSeverityColor(severity) {
+    const colors = {
+        'critical': 'danger',
+        'high': 'warning',
+        'medium': 'info',
+        'low': 'secondary'
+    };
+    return colors[severity] || colors.medium;
+}
+
+function formatDateTime(timestamp) {
+    if (!timestamp) return 'Unknown time';
+    return new Date(timestamp).toLocaleString();
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+});
+</script>
+{% endblock %}

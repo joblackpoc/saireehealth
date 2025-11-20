@@ -1,0 +1,2261 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Health Report - Comprehensive Analysis{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+    .search-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    .graph-container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    .comparison-table th {
+        background: #4a90e2;
+        color: white;
+        font-weight: 600;
+    }
+    .overview-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 15px;
+    }
+    .health-score {
+        font-size: 1.8rem;
+        font-weight: bold;
+    }
+    .crud-table {
+        font-size: 0.9rem;
+    }
+    .btn-action {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    .filter-form {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+    }
+    .section-title {
+        border-left: 4px solid #4a90e2;
+        padding-left: 15px;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+    
+    /* Mobile Optimization Styles */
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+        .stats-card {
+            margin-bottom: 15px;
+        }
+        .section-title h4 {
+            font-size: 1.1rem;
+        }
+        .health-analysis-card {
+            margin-bottom: 12px;
+        }
+        .mobile-analysis-card {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border-radius: 12px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .btn-group .btn {
+            font-size: 0.75rem;
+            padding: 0.4rem 0.8rem;
+        }
+        .search-section {
+            margin-bottom: 20px;
+        }
+        .filter-form {
+            padding: 15px;
+        }
+    }
+
+    /* Comprehensive Comparison Table Mobile Styles */
+    .comparison-mobile-card {
+        border-radius: 12px;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease;
+    }
+    
+    .comparison-mobile-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .health-metric-mobile {
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+    }
+    
+    .health-metric-mobile:hover {
+        transform: scale(1.02);
+    }
+    
+    @media (max-width: 767px) {
+        .comparison-table-container {
+            padding: 0 5px;
+        }
+        
+        .health-metric-mobile .card-body {
+            padding: 0.5rem !important;
+        }
+        
+        .comparison-mobile-card .card-body {
+            padding: 0.75rem !important;
+        }
+        
+        .section-title h4 {
+            font-size: 1.1rem;
+        }
+        
+        .section-title small {
+            font-size: 0.8rem;
+        }
+    }
+    
+    /* Smooth transitions for responsive behavior */
+    .table-responsive {
+        transition: all 0.3s ease;
+    }
+    
+    /* Mobile table scrolling indicator */
+    .mobile-scroll-indicator {
+        background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.1) 50%, transparent 100%);
+        height: 3px;
+        width: 100%;
+        margin-top: 5px;
+        border-radius: 2px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 mb-0"><i class="fas fa-chart-line me-2"></i>Admin Health Report</h1>
+            <p class="text-muted">Comprehensive health analysis and management dashboard</p>
+        </div>
+        <!-- Simple test export button -->
+
+        
+        <div class="btn-group" role="group">
+
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="{{ export_urls.complete|default:'?export=excel' }}">
+                    <i class="fas fa-file-excel me-2"></i>Complete Report (All Sheets)
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">Individual Sections:</h6></li>
+                <li><a class="dropdown-item" href="{{ export_urls.graph|default:'?export=excel&section=graph' }}">
+                    <i class="fas fa-chart-line me-2"></i>Progress Graph & Data
+                </a></li>
+                <li><a class="dropdown-item" href="{{ export_urls.comparison|default:'?export=excel&section=comparison' }}">
+                    <i class="fas fa-balance-scale me-2"></i>Comparison Table
+                </a></li>
+                <li><a class="dropdown-item" href="{{ export_urls.overview|default:'?export=excel&section=overview' }}">
+                    <i class="fas fa-eye me-2"></i>Health Overview
+                </a></li>
+                <li><a class="dropdown-item" href="{{ export_urls.records|default:'?export=excel&section=records' }}">
+                    <i class="fas fa-database me-2"></i>All Records (CRUD)
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{{ export_urls.complete_history|default:'?export=excel&section=complete_history' }}">
+                    <i class="fas fa-history me-2 text-primary"></i>Complete Records History (All Users)
+                </a></li>
+                <li><a class="dropdown-item" href="{{ export_urls.current_user|default:'?export=excel&section=current_user' }}">
+                    <i class="fas fa-user me-2 text-success"></i>My Records Only ({{ user.username }})
+                </a></li>
+                {% if search_applied %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="{{ export_urls.selected_user|default:'?export=excel&section=selected_user' }}">
+                    <i class="fas fa-user-check me-2 text-warning"></i>Selected User Complete Records
+                </a></li>
+                {% endif %}
+            </ul>
+        </div>
+        {% if search_applied %}
+        <a href="{% url 'health_app:admin_health_report' %}" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-redo me-1"></i>Reset Filters
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="search-section p-4 mb-4">
+        <h3 class="mb-3"><i class="fas fa-search me-2"></i>Advanced Search & Filters</h3>
+        <form method="post" class="filter-form p-3">
+            {% csrf_token %}
+            <!-- Mobile-First Search Form -->
+            <div class="row g-2 g-md-3">
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small">{{ form.firstname.label }}</label>
+                    {{ form.firstname }}
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small">{{ form.lastname.label }}</label>
+                    {{ form.lastname }}
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small">{{ form.gender.label }}</label>
+                    {{ form.gender }}
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small">Age Min</label>
+                    {{ form.age_min }}
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small">Age Max</label>
+                    {{ form.age_max }}
+                </div>
+            </div>
+            <div class="row g-2 g-md-3 mt-2">
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small">{{ form.date_from.label }}</label>
+                    {{ form.date_from }}
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <label class="form-label small">{{ form.date_to.label }}</label>
+                    {{ form.date_to }}
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label small">{{ form.health_index.label }}</label>
+                    {{ form.health_index }}
+                </div>
+                <div class="col-12 col-md-2">
+                    <button type="submit" class="btn btn-light w-100 mt-2 mt-md-0" style="height: fit-content;">
+                        <i class="fas fa-search me-1"></i><span class="d-none d-sm-inline">Search & </span>Analyze
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if search_applied %}
+    <!-- Statistics Dashboard -->
+    <!-- Mobile-Optimized Statistics Dashboard -->
+    <div class="row mb-4 g-2 g-md-3">
+        <div class="col-6 col-sm-4 col-md-2">
+            <div class="stats-card p-2 p-md-3 text-center">
+                <div class="text-primary fs-3 fs-md-1"><i class="fas fa-users"></i></div>
+                <h5 class="h6 h4-md mb-1">{{ statistics.total_users }}</h5>
+                <small class="text-muted" style="font-size: 0.75rem;">Users</small>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+            <div class="stats-card p-2 p-md-3 text-center">
+                <div class="text-success fs-3 fs-md-1"><i class="fas fa-heartbeat"></i></div>
+                <h5 class="h6 h4-md mb-1">{{ statistics.total_records }}</h5>
+                <small class="text-muted" style="font-size: 0.75rem;">Records</small>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+            <div class="stats-card p-2 p-md-3 text-center">
+                <div class="text-info fs-3 fs-md-1"><i class="fas fa-chart-bar"></i></div>
+                <h5 class="h6 h4-md mb-1">{{ statistics.avg_records_per_user }}</h5>
+                <small class="text-muted" style="font-size: 0.75rem;">Avg/User</small>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+            <div class="stats-card p-2 p-md-3 text-center">
+                <div class="text-success fs-3 fs-md-1"><i class="fas fa-check-circle"></i></div>
+                <h5 class="h6 h4-md mb-1">{{ statistics.healthy_users }}</h5>
+                <small class="text-muted" style="font-size: 0.75rem;">Healthy</small>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+            <div class="stats-card p-2 p-md-3 text-center">
+                <div class="text-warning fs-3 fs-md-1"><i class="fas fa-exclamation-triangle"></i></div>
+                <h5 class="h6 h4-md mb-1">{{ statistics.at_risk_users }}</h5>
+                <small class="text-muted" style="font-size: 0.75rem;">At Risk</small>
+            </div>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+            <div class="stats-card p-2 p-md-3 text-center">
+                <div class="text-primary fs-3 fs-md-1"><i class="fas fa-percentage"></i></div>
+                <h5 class="h6 h4-md mb-1">{{ statistics.healthy_percentage }}%</h5>
+                <small class="text-muted" style="font-size: 0.75rem;">Rate</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Graph Section -->
+    {% if graph_base64 %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="graph-container">
+                <div class="p-3 bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-chart-line me-2"></i>Health Index Progress Graph</h4>
+                    <small>Filtered by selected health index</small>
+                </div>
+                <div class="p-3">
+                    <img src="data:image/png;base64,{{ graph_base64 }}" 
+                         class="img-fluid w-100" 
+                         alt="Health Progress Graph">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Comprehensive Comparison Table Section - Mobile Responsive -->
+    {% if latest_overview %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="section-title">
+                <h4><i class="fas fa-balance-scale me-2"></i>Comprehensive Health Comparison Table</h4>
+                <small class="text-muted d-block">All health indices: First vs Last vs Normal values with change analysis</small>
+            </div>
+
+            <!-- Mobile Card Layout (Small Screens) -->
+            <div class="d-md-none">
+                {% for item in latest_overview %}
+                <div class="card mb-3" style="border-left: 5px solid {% if item.health_score >= 80 %}#28a745{% elif item.health_score >= 60 %}#ffc107{% else %}#dc3545{% endif %};">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">{{ item.profile.firstname }} {{ item.profile.lastname }}</h6>
+                                <small class="text-muted">{{ item.user.username }}</small>
+                            </div>
+                            <span class="badge" style="background-color: {% if item.health_score >= 80 %}#28a745{% elif item.health_score >= 60 %}#ffc107{% else %}#dc3545{% endif %};">
+                                {{ item.health_score|floatformat:0 }}%
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body p-2">
+                        <!-- Mobile Health Metrics Grid -->
+                        <div class="row g-2">
+                            <!-- BMI -->
+                            {% if item.comparison_analysis.bmi %}
+                            <div class="col-6">
+                                <div class="card border-0" style="background-color: {{ item.comparison_analysis.bmi.color }}20;">
+                                    <div class="card-body p-2 text-center">
+                                        <div class="fw-bold mb-1" style="font-size: 0.8rem;">
+                                            <i class="fas fa-weight me-1"></i>BMI
+                                        </div>
+                                        <div class="row text-center" style="font-size: 0.75rem;">
+                                            <div class="col-4">
+                                                <div class="text-muted">First</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.bmi.start_value }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted">Last</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.bmi.end_value }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted">Change</div>
+                                                <div class="badge" style="background-color: {{ item.comparison_analysis.bmi.color }}; font-size: 0.6rem;">
+                                                    {{ item.comparison_analysis.bmi.change }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-1">
+                                            <small class="badge w-100" style="background-color: {{ item.comparison_analysis.bmi.color }}; font-size: 0.65rem;">
+                                                {{ item.comparison_analysis.bmi.text }}
+                                            </small>
+                                        </div>
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.6rem;">Normal: 18.5-24.9</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Fat % -->
+                            {% if item.comparison_analysis.fat_percent %}
+                            <div class="col-6">
+                                <div class="card border-0" style="background-color: {{ item.comparison_analysis.fat_percent.color }}20;">
+                                    <div class="card-body p-2 text-center">
+                                        <div class="fw-bold mb-1" style="font-size: 0.8rem;">
+                                            <i class="fas fa-percentage me-1"></i>Fat %
+                                        </div>
+                                        <div class="row text-center" style="font-size: 0.75rem;">
+                                            <div class="col-4">
+                                                <div class="text-muted">First</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.fat_percent.start_value }}%</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted">Last</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.fat_percent.end_value }}%</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted">Change</div>
+                                                <div class="badge" style="background-color: {{ item.comparison_analysis.fat_percent.color }}; font-size: 0.6rem;">
+                                                    {{ item.comparison_analysis.fat_percent.change }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-1">
+                                            <small class="badge w-100" style="background-color: {{ item.comparison_analysis.fat_percent.color }}; font-size: 0.65rem;">
+                                                {{ item.comparison_analysis.fat_percent.text }}
+                                            </small>
+                                        </div>
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.6rem;">
+                                            {% if item.profile.gender == 'M' %}Normal: 10-20%{% else %}Normal: 16-25%{% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Visceral Fat -->
+                            {% if item.comparison_analysis.visceral_fat %}
+                            <div class="col-6">
+                                <div class="card border-0" style="background-color: {{ item.comparison_analysis.visceral_fat.color }}20;">
+                                    <div class="card-body p-2 text-center">
+                                        <div class="fw-bold mb-1" style="font-size: 0.8rem;">
+                                            <i class="fas fa-circle me-1"></i>Visceral
+                                        </div>
+                                        <div class="row text-center" style="font-size: 0.75rem;">
+                                            <div class="col-4">
+                                                <div class="text-muted">First</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.visceral_fat.start_value }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted">Last</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.visceral_fat.end_value }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted">Change</div>
+                                                <div class="badge" style="background-color: {{ item.comparison_analysis.visceral_fat.color }}; font-size: 0.6rem;">
+                                                    {{ item.comparison_analysis.visceral_fat.change }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-1">
+                                            <small class="badge w-100" style="background-color: {{ item.comparison_analysis.visceral_fat.color }}; font-size: 0.65rem;">
+                                                {{ item.comparison_analysis.visceral_fat.text }}
+                                            </small>
+                                        </div>
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.6rem;">Normal: 1-12</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Muscle % -->
+                            {% if item.comparison_analysis.muscle_percent %}
+                            <div class="col-6">
+                                <div class="card border-0" style="background-color: {{ item.comparison_analysis.muscle_percent.color }}20;">
+                                    <div class="card-body p-2 text-center">
+                                        <div class="fw-bold mb-1" style="font-size: 0.8rem;">
+                                            <i class="fas fa-dumbbell me-1"></i>Muscle %
+                                        </div>
+                                        <div class="row text-center" style="font-size: 0.75rem;">
+                                            <div class="col-4">
+                                                <div class="text-muted">First</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.muscle_percent.start_value }}%</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted">Last</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.muscle_percent.end_value }}%</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted">Change</div>
+                                                <div class="badge" style="background-color: {{ item.comparison_analysis.muscle_percent.color }}; font-size: 0.6rem;">
+                                                    {{ item.comparison_analysis.muscle_percent.change }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-1">
+                                            <small class="badge w-100" style="background-color: {{ item.comparison_analysis.muscle_percent.color }}; font-size: 0.65rem;">
+                                                {{ item.comparison_analysis.muscle_percent.text }}
+                                            </small>
+                                        </div>
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.6rem;">
+                                            {% if item.profile.gender == 'M' %}Normal: 38-54%{% else %}Normal: 28-39%{% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Blood Pressure -->
+                            {% if item.comparison_analysis.blood_pressure_systolic %}
+                            <div class="col-6">
+                                <div class="card border-0" style="background-color: {{ item.comparison_analysis.blood_pressure_systolic.color }}20;">
+                                    <div class="card-body p-2 text-center">
+                                        <div class="fw-bold mb-1" style="font-size: 0.8rem;">
+                                            <i class="fas fa-heartbeat me-1"></i>BP
+                                        </div>
+                                        <div class="row text-center" style="font-size: 0.7rem;">
+                                            <div class="col-4">
+                                                <div class="text-muted">First</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.blood_pressure_systolic.start_value }}/{{ item.comparison_analysis.blood_pressure_diastolic.start_value }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted">Last</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.blood_pressure_systolic.end_value }}/{{ item.comparison_analysis.blood_pressure_diastolic.end_value }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted">Change</div>
+                                                <div class="badge" style="background-color: {{ item.comparison_analysis.blood_pressure_systolic.color }}; font-size: 0.6rem;">
+                                                    {{ item.comparison_analysis.blood_pressure_systolic.change }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-1">
+                                            <small class="badge w-100" style="background-color: {{ item.comparison_analysis.blood_pressure_systolic.color }}; font-size: 0.65rem;">
+                                                {{ item.comparison_analysis.blood_pressure_systolic.text }}
+                                            </small>
+                                        </div>
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.6rem;">Normal: <120/80</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Waist -->
+                            {% if item.comparison_analysis.waist %}
+                            <div class="col-6">
+                                <div class="card border-0" style="background-color: {{ item.comparison_analysis.waist.color }}20;">
+                                    <div class="card-body p-2 text-center">
+                                        <div class="fw-bold mb-1" style="font-size: 0.8rem;">
+                                            <i class="fas fa-ruler me-1"></i>Waist
+                                        </div>
+                                        <div class="row text-center" style="font-size: 0.75rem;">
+                                            <div class="col-4">
+                                                <div class="text-muted">First</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.waist.start_value }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted">Last</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.waist.end_value }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted">Change</div>
+                                                <div class="badge" style="background-color: {{ item.comparison_analysis.waist.color }}; font-size: 0.6rem;">
+                                                    {{ item.comparison_analysis.waist.change }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-1">
+                                            <small class="badge w-100" style="background-color: {{ item.comparison_analysis.waist.color }}; font-size: 0.65rem;">
+                                                {{ item.comparison_analysis.waist.text }}
+                                            </small>
+                                        </div>
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.6rem;">
+                                            {% if item.profile.gender == 'M' %}Normal: <90cm{% else %}Normal: <80cm{% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Additional Health Metrics (Lab Values) -->
+                        {% if item.comparison_analysis.cholesterol or item.comparison_analysis.ldl or item.comparison_analysis.hdl or item.comparison_analysis.fbs or item.comparison_analysis.triglycerides %}
+                        <hr class="my-2">
+                        <div class="text-center mb-2">
+                            <small class="fw-bold text-muted">Laboratory Values</small>
+                        </div>
+                        <div class="row g-2">
+                            <!-- Cholesterol -->
+                            {% if item.comparison_analysis.cholesterol %}
+                            <div class="col-6">
+                                <div class="card border-0" style="background-color: {{ item.comparison_analysis.cholesterol.color }}15;">
+                                    <div class="card-body p-2 text-center">
+                                        <div class="fw-bold mb-1" style="font-size: 0.7rem;">
+                                            <i class="fas fa-tint me-1"></i>Chol
+                                        </div>
+                                        <div class="row text-center" style="font-size: 0.65rem;">
+                                            <div class="col-4">
+                                                <div class="text-muted">First</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.cholesterol.start_value }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted">Last</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.cholesterol.end_value }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="badge" style="background-color: {{ item.comparison_analysis.cholesterol.color }}; font-size: 0.55rem;">
+                                                    {{ item.comparison_analysis.cholesterol.change }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Other lab values in similar format -->
+                            {% if item.comparison_analysis.fbs %}
+                            <div class="col-6">
+                                <div class="card border-0" style="background-color: {{ item.comparison_analysis.fbs.color }}15;">
+                                    <div class="card-body p-2 text-center">
+                                        <div class="fw-bold mb-1" style="font-size: 0.7rem;">
+                                            <i class="fas fa-cube me-1"></i>FBS
+                                        </div>
+                                        <div class="row text-center" style="font-size: 0.65rem;">
+                                            <div class="col-4">
+                                                <div class="text-muted">First</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.fbs.start_value }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="text-muted">Last</div>
+                                                <div class="fw-bold">{{ item.comparison_analysis.fbs.end_value }}</div>
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="badge" style="background-color: {{ item.comparison_analysis.fbs.color }}; font-size: 0.55rem;">
+                                                    {{ item.comparison_analysis.fbs.change }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Mobile Summary -->
+                <div class="alert alert-info">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-mobile-alt me-2"></i>
+                        <div>
+                            <strong>Mobile View Active</strong><br>
+                            <small>Switch to desktop for full table view. Showing {{ latest_overview|length }} user comparisons.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desktop Table Layout (Medium+ Screens) -->
+            <div class="d-none d-md-block">
+                <!-- User Selection Dropdown for Desktop View -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Select User for Detailed Comparison:</label>
+                        <select class="form-select form-select-sm" id="userSelector" onchange="showUserComparison()">
+                            <option value="">-- Select a User --</option>
+                            {% for item in latest_overview %}
+                            <option value="{{ item.user.id }}" data-user="{{ item.user.username }}" data-name="{{ item.profile.firstname }} {{ item.profile.lastname }}">
+                                {{ item.profile.firstname }} {{ item.profile.lastname }} ({{ item.user.username }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="small text-muted mt-4">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Select a user to see their complete health index comparison with first vs last values, status, and analysis.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Individual User Comparison Tables (Hidden by default) -->
+                {% for item in latest_overview %}
+                <div id="userComparison{{ item.user.id }}" class="user-comparison-table" style="display: none;">
+                    <div class="card">
+                        <div class="card-header" style="background: linear-gradient(135deg, {% if item.health_score >= 80 %}#d4edda{% elif item.health_score >= 60 %}#fff3cd{% else %}#f8d7da{% endif %} 0%, #f8f9fa 100%);">
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-user-circle me-2" style="color: {% if item.health_score >= 80 %}#28a745{% elif item.health_score >= 60 %}#ffc107{% else %}#dc3545{% endif %};"></i>
+                                        {{ item.profile.firstname }} {{ item.profile.lastname }}
+                                        <span class="text-muted">({{ item.user.username }})</span>
+                                    </h5>
+                                    <small class="text-muted">
+                                        {{ item.age }} ปี •
+                                        {{ item.profile.gender }} •
+                                        {{ item.total_records }} รายการ •
+                                        <i class="fas fa-clock me-1"></i>{{ item.recorded_date|date:"M d, Y" }}
+                                    </small>
+                                </div>
+                                <div class="col-auto">
+                                    <div class="text-end">
+                                        <div class="h4 mb-0" style="color: {% if item.health_score >= 80 %}#28a745{% elif item.health_score >= 60 %}#ffc107{% else %}#dc3545{% endif %};">
+                                            {{ item.health_score|floatformat:0 }}%
+                                        </div>
+                                        <small class="text-muted">Health Score</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-sm mb-0 comparison-table">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th style="width: 25%;">Health Index</th>
+                                            <th style="width: 15%;" class="text-center">First Date Value</th>
+                                            <th style="width: 15%;" class="text-center">Last Date Value</th>
+                                            <th style="width: 20%;" class="text-center">Status + Normal Range</th>
+                                            <th style="width: 25%;">Results Analysis</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- BMI Row -->
+                                        {% if item.comparison_analysis.bmi %}
+                                        <tr style="background-color: {{ item.comparison_analysis.bmi.color }}10;">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-weight me-2 text-primary"></i>
+                                                    <div>
+                                                        <strong>BMI (Body Mass Index)</strong>
+                                                        <br><small class="text-muted">Body weight relative to height</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ item.comparison_analysis.bmi.start_value }}</span>
+                                                <br><small class="text-muted">kg/m²</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">{{ item.comparison_analysis.bmi.end_value }}</span>
+                                                <br><small class="text-muted">kg/m²</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.bmi.color }};">
+                                                    {{ item.comparison_analysis.bmi.text }}
+                                                </span>
+                                                <br><small class="text-muted">Normal: 18.5-24.9</small>
+                                                <br><span class="badge bg-info mt-1">{{ item.comparison_analysis.bmi.change }}</span>
+                                            </td>
+                                            <td>
+                                                <small>
+                                                    {% if item.comparison_analysis.bmi.end_value|floatformat:1 < 18.5 %}
+                                                        <i class="fas fa-exclamation-triangle text-warning"></i> <strong>Underweight:</strong> BMI ต่ำกว่าเกณฑ์ ควรเพิ่มน้ำหนักและสร้างกล้ามเนื้อ
+                                                    {% elif item.comparison_analysis.bmi.end_value|floatformat:1 <= 24.9 %}
+                                                        <i class="fas fa-check-circle text-success"></i> <strong>Normal Weight:</strong> BMI อยู่ในเกณฑ์ปกติ ควรรักษาน้ำหนักปัจจุบัน
+                                                    {% elif item.comparison_analysis.bmi.end_value|floatformat:1 <= 29.9 %}
+                                                        <i class="fas fa-exclamation-circle text-warning"></i> <strong>Overweight:</strong> BMI สูงกว่าเกณฑ์ ควรลดน้ำหนัก 5-10%
+                                                    {% else %}
+                                                        <i class="fas fa-times-circle text-danger"></i> <strong>Obese:</strong> BMI สูงมาก เสี่ยงต่อโรคเรื้อรัง ควรลดน้ำหนักอย่างเร่งด่วน
+                                                    {% endif %}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+
+                                        <!-- Fat Percentage Row -->
+                                        {% if item.comparison_analysis.fat_percent %}
+                                        <tr style="background-color: {{ item.comparison_analysis.fat_percent.color }}10;">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-percentage me-2 text-warning"></i>
+                                                    <div>
+                                                        <strong>Body Fat Percentage</strong>
+                                                        <br><small class="text-muted">Percentage of body weight from fat</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ item.comparison_analysis.fat_percent.start_value }}%</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">{{ item.comparison_analysis.fat_percent.end_value }}%</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.fat_percent.color }};">
+                                                    {{ item.comparison_analysis.fat_percent.text }}
+                                                </span>
+                                                <br><small class="text-muted">
+                                                    {% if item.profile.gender == 'M' %}Normal: 10-20%{% else %}Normal: 16-25%{% endif %}
+                                                </small>
+                                                <br><span class="badge bg-info mt-1">{{ item.comparison_analysis.fat_percent.change }}</span>
+                                            </td>
+                                            <td>
+                                                <small>
+                                                    {% if item.profile.gender == 'M' %}
+                                                        {% if item.comparison_analysis.fat_percent.end_value|floatformat:1 < 10 %}
+                                                            <i class="fas fa-exclamation-triangle text-warning"></i> <strong>Too Low:</strong> ไขมันต่ำเกินไป อาจส่งผลต่อฮอร์โมน
+                                                        {% elif item.comparison_analysis.fat_percent.end_value|floatformat:1 <= 20 %}
+                                                            <i class="fas fa-check-circle text-success"></i> <strong>Excellent:</strong> ระดับไขมันเหมาะสมสำหรับผู้ชาย
+                                                        {% else %}
+                                                            <i class="fas fa-exclamation-circle text-danger"></i> <strong>High:</strong> ไขมันสูง ควรออกกำลังกายและควบคุมอาหาร
+                                                        {% endif %}
+                                                    {% else %}
+                                                        {% if item.comparison_analysis.fat_percent.end_value|floatformat:1 < 16 %}
+                                                            <i class="fas fa-exclamation-triangle text-warning"></i> <strong>Too Low:</strong> ไขมันต่ำเกินไป อาจส่งผลต่อการมีประจำเดือน
+                                                        {% elif item.comparison_analysis.fat_percent.end_value|floatformat:1 <= 25 %}
+                                                            <i class="fas fa-check-circle text-success"></i> <strong>Excellent:</strong> ระดับไขมันเหมาะสมสำหรับผู้หญิง
+                                                        {% else %}
+                                                            <i class="fas fa-exclamation-circle text-danger"></i> <strong>High:</strong> ไขมันสูง เพิ่มความเสี่ยงโรคเรื้อรัง
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+
+                                        <!-- Visceral Fat Row -->
+                                        {% if item.comparison_analysis.visceral_fat %}
+                                        <tr style="background-color: {{ item.comparison_analysis.visceral_fat.color }}10;">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-circle me-2 text-danger"></i>
+                                                    <div>
+                                                        <strong>Visceral Fat Level</strong>
+                                                        <br><small class="text-muted">Fat around internal organs</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ item.comparison_analysis.visceral_fat.start_value }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">{{ item.comparison_analysis.visceral_fat.end_value }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.visceral_fat.color }};">
+                                                    {{ item.comparison_analysis.visceral_fat.text }}
+                                                </span>
+                                                <br><small class="text-muted">Normal: 1-12</small>
+                                                <br><span class="badge bg-info mt-1">{{ item.comparison_analysis.visceral_fat.change }}</span>
+                                            </td>
+                                            <td>
+                                                <small>
+                                                    {% if item.comparison_analysis.visceral_fat.end_value|floatformat:1 <= 9 %}
+                                                        <i class="fas fa-check-circle text-success"></i> <strong>Healthy:</strong> ระดับไขมันช่องท้องต่ำ เสี่ยงต่อโรคน้อย
+                                                    {% elif item.comparison_analysis.visceral_fat.end_value|floatformat:1 <= 14 %}
+                                                        <i class="fas fa-exclamation-triangle text-warning"></i> <strong>Moderate:</strong> ไขมันช่องท้องปานกลาง ควรเฝ้าระวัง
+                                                    {% else %}
+                                                        <i class="fas fa-times-circle text-danger"></i> <strong>High Risk:</strong> ไขมันช่องท้องสูง เสี่ยงต่อเบาหวาน โรคหัวใจ
+                                                    {% endif %}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+
+                                        <!-- Muscle Percentage Row -->
+                                        {% if item.comparison_analysis.muscle_percent %}
+                                        <tr style="background-color: {{ item.comparison_analysis.muscle_percent.color }}10;">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-dumbbell me-2 text-success"></i>
+                                                    <div>
+                                                        <strong>Muscle Mass Percentage</strong>
+                                                        <br><small class="text-muted">Skeletal muscle as % of body weight</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ item.comparison_analysis.muscle_percent.start_value }}%</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">{{ item.comparison_analysis.muscle_percent.end_value }}%</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.muscle_percent.color }};">
+                                                    {{ item.comparison_analysis.muscle_percent.text }}
+                                                </span>
+                                                <br><small class="text-muted">
+                                                    {% if item.profile.gender == 'M' %}Normal: 38-54%{% else %}Normal: 28-39%{% endif %}
+                                                </small>
+                                                <br><span class="badge bg-info mt-1">{{ item.comparison_analysis.muscle_percent.change }}</span>
+                                            </td>
+                                            <td>
+                                                <small>
+                                                    {% if item.profile.gender == 'M' %}
+                                                        {% if item.comparison_analysis.muscle_percent.end_value|floatformat:1 < 38 %}
+                                                            <i class="fas fa-exclamation-triangle text-warning"></i> <strong>Low:</strong> กล้ามเนื้อต่ำ ควรเพิ่มการออกกำลังกายแบบต้านทาน
+                                                        {% elif item.comparison_analysis.muscle_percent.end_value|floatformat:1 <= 54 %}
+                                                            <i class="fas fa-check-circle text-success"></i> <strong>Good:</strong> กล้ามเนื้อเหมาะสมช่วยเผาผลาญและโครงสร้างร่างกาย
+                                                        {% else %}
+                                                            <i class="fas fa-star text-primary"></i> <strong>Excellent:</strong> กล้ามเนื้อสูงมาก เหมาะสำหรับนักกีฬา
+                                                        {% endif %}
+                                                    {% else %}
+                                                        {% if item.comparison_analysis.muscle_percent.end_value|floatformat:1 < 28 %}
+                                                            <i class="fas fa-exclamation-triangle text-warning"></i> <strong>Low:</strong> กล้ามเนื้อต่ำ อาจเสี่ยงต่อกระดูกพรุน
+                                                        {% elif item.comparison_analysis.muscle_percent.end_value|floatformat:1 <= 39 %}
+                                                            <i class="fas fa-check-circle text-success"></i> <strong>Good:</strong> กล้ามเนื้อเหมาะสมช่วยควบคุมน้ำหนัก
+                                                        {% else %}
+                                                            <i class="fas fa-star text-primary"></i> <strong>Excellent:</strong> กล้ามเนื้อสูงมาก แข็งแรงดีเยิ่ยม
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+
+                                        <!-- Blood Pressure Row -->
+                                        {% if item.comparison_analysis.blood_pressure_systolic %}
+                                        <tr style="background-color: {{ item.comparison_analysis.blood_pressure_systolic.color }}10;">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-heartbeat me-2 text-danger"></i>
+                                                    <div>
+                                                        <strong>Blood Pressure</strong>
+                                                        <br><small class="text-muted">Systolic/Diastolic pressure</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ item.comparison_analysis.blood_pressure_systolic.start_value }}/{{ item.comparison_analysis.blood_pressure_diastolic.start_value }}</span>
+                                                <br><small class="text-muted">mmHg</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">{{ item.comparison_analysis.blood_pressure_systolic.end_value }}/{{ item.comparison_analysis.blood_pressure_diastolic.end_value }}</span>
+                                                <br><small class="text-muted">mmHg</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.blood_pressure_systolic.color }};">
+                                                    {{ item.comparison_analysis.blood_pressure_systolic.text }}
+                                                </span>
+                                                <br><small class="text-muted">Normal: <120/80</small>
+                                                <br><span class="badge bg-info mt-1">{{ item.comparison_analysis.blood_pressure_systolic.change }}</span>
+                                            </td>
+                                            <td>
+                                                <small>
+                                                    {% if item.comparison_analysis.blood_pressure_systolic.end_value < 120 and item.comparison_analysis.blood_pressure_diastolic.end_value < 80 %}
+                                                        <i class="fas fa-check-circle text-success"></i> <strong>Normal:</strong> ความดันโลหิตปกติ ควรรักษาระดับนี้
+                                                    {% elif item.comparison_analysis.blood_pressure_systolic.end_value <= 129 %}
+                                                        <i class="fas fa-exclamation-triangle text-warning"></i> <strong>Elevated:</strong> ความดันสูงขั้นต้น ควรเฝ้าระวังและปรับวิถีชีวิต
+                                                    {% elif item.comparison_analysis.blood_pressure_systolic.end_value <= 139 %}
+                                                        <i class="fas fa-exclamation-circle text-danger"></i> <strong>Stage 1 HTN:</strong> ความดันสูงระยะที่ 1 ควรปรึกษาแพทย์
+                                                    {% else %}
+                                                        <i class="fas fa-times-circle text-danger"></i> <strong>Stage 2 HTN:</strong> ความดันสูงระยะที่ 2 ต้องรักษาทันที
+                                                    {% endif %}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+
+                                        <!-- Waist Circumference Row -->
+                                        {% if item.comparison_analysis.waist %}
+                                        <tr style="background-color: {{ item.comparison_analysis.waist.color }}10;">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-ruler me-2 text-info"></i>
+                                                    <div>
+                                                        <strong>Waist Circumference</strong>
+                                                        <br><small class="text-muted">Abdominal obesity indicator</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ item.comparison_analysis.waist.start_value }}</span>
+                                                <br><small class="text-muted">cm</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">{{ item.comparison_analysis.waist.end_value }}</span>
+                                                <br><small class="text-muted">cm</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.waist.color }};">
+                                                    {{ item.comparison_analysis.waist.text }}
+                                                </span>
+                                                <br><small class="text-muted">
+                                                    {% if item.profile.gender == 'M' %}Normal: <90cm{% else %}Normal: <80cm{% endif %}
+                                                </small>
+                                                <br><span class="badge bg-info mt-1">{{ item.comparison_analysis.waist.change }}</span>
+                                            </td>
+                                            <td>
+                                                <small>
+                                                    {% if item.profile.gender == 'M' %}
+                                                        {% if item.comparison_analysis.waist.end_value < 90 %}
+                                                            <i class="fas fa-check-circle text-success"></i> <strong>Normal:</strong> รอบเอวปกติ เสี่ยงต่อโรคเมตาบอลิกต่ำ
+                                                        {% elif item.comparison_analysis.waist.end_value <= 102 %}
+                                                            <i class="fas fa-exclamation-triangle text-warning"></i> <strong>Increased Risk:</strong> เสี่ยงปานกลางต่อโรคเรื้อรัง
+                                                        {% else %}
+                                                            <i class="fas fa-times-circle text-danger"></i> <strong>High Risk:</strong> เสี่ยงสูงต่อเบาหวาน โรคหัวใจ
+                                                        {% endif %}
+                                                    {% else %}
+                                                        {% if item.comparison_analysis.waist.end_value < 80 %}
+                                                            <i class="fas fa-check-circle text-success"></i> <strong>Normal:</strong> รอบเอวปกติ เสี่ยงต่อโรคเมตาบอลิกต่ำ
+                                                        {% elif item.comparison_analysis.waist.end_value <= 88 %}
+                                                            <i class="fas fa-exclamation-triangle text-warning"></i> <strong>Increased Risk:</strong> เสี่ยงปานกลางต่อโรคเรื้อรัง
+                                                        {% else %}
+                                                            <i class="fas fa-times-circle text-danger"></i> <strong>High Risk:</strong> เสี่ยงสูงต่อเบาหวาน โรคหัวใจ
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+
+                                        <!-- Laboratory Values Section -->
+                                        {% if item.comparison_analysis.cholesterol or item.comparison_analysis.ldl or item.comparison_analysis.hdl or item.comparison_analysis.fbs or item.comparison_analysis.triglycerides %}
+                                        <tr>
+                                            <td colspan="5" class="bg-light text-center py-2">
+                                                <strong><i class="fas fa-vial me-2"></i>Laboratory Values</strong>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Cholesterol Row -->
+                                        {% if item.comparison_analysis.cholesterol %}
+                                        <tr style="background-color: {{ item.comparison_analysis.cholesterol.color }}10;">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-tint me-2 text-primary"></i>
+                                                    <div>
+                                                        <strong>Total Cholesterol</strong>
+                                                        <br><small class="text-muted">Total blood cholesterol level</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ item.comparison_analysis.cholesterol.start_value }}</span>
+                                                <br><small class="text-muted">mg/dL</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">{{ item.comparison_analysis.cholesterol.end_value }}</span>
+                                                <br><small class="text-muted">mg/dL</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.cholesterol.color }};">
+                                                    {{ item.comparison_analysis.cholesterol.text }}
+                                                </span>
+                                                <br><small class="text-muted">Normal: <200</small>
+                                                <br><span class="badge bg-info mt-1">{{ item.comparison_analysis.cholesterol.change }}</span>
+                                            </td>
+                                            <td>
+                                                <small>
+                                                    {% if item.comparison_analysis.cholesterol.end_value < 200 %}
+                                                        <i class="fas fa-check-circle text-success"></i> <strong>Desirable:</strong> ระดับคอเลสเตอรอลดี ลดความเสี่ยงโรคหัวใจ
+                                                    {% elif item.comparison_analysis.cholesterol.end_value <= 239 %}
+                                                        <i class="fas fa-exclamation-triangle text-warning"></i> <strong>Borderline High:</strong> เริ่มเสี่ยง ควรปรับอาหาร เพิ่มการออกกำลังกาย
+                                                    {% else %}
+                                                        <i class="fas fa-times-circle text-danger"></i> <strong>High:</strong> เสี่ยงสูงต่อโรคหัวใจ ควรปรึกษาแพทย์เรื่องยา
+                                                    {% endif %}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+
+                                        <!-- LDL Cholesterol Row -->
+                                        {% if item.comparison_analysis.ldl %}
+                                        <tr style="background-color: {{ item.comparison_analysis.ldl.color }}10;">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-arrow-down me-2 text-danger"></i>
+                                                    <div>
+                                                        <strong>LDL Cholesterol</strong>
+                                                        <br><small class="text-muted">Bad cholesterol</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ item.comparison_analysis.ldl.start_value }}</span>
+                                                <br><small class="text-muted">mg/dL</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">{{ item.comparison_analysis.ldl.end_value }}</span>
+                                                <br><small class="text-muted">mg/dL</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.ldl.color }};">
+                                                    {{ item.comparison_analysis.ldl.text }}
+                                                </span>
+                                                <br><small class="text-muted">Normal: <100</small>
+                                                <br><span class="badge bg-info mt-1">{{ item.comparison_analysis.ldl.change }}</span>
+                                            </td>
+                                            <td>
+                                                <small>
+                                                    {% if item.comparison_analysis.ldl.end_value < 100 %}
+                                                        <i class="fas fa-check-circle text-success"></i> <strong>Optimal:</strong> LDL ต่ำ ป้องกันการอุดตันหลอดเลือด
+                                                    {% elif item.comparison_analysis.ldl.end_value <= 129 %}
+                                                        <i class="fas fa-exclamation-triangle text-warning"></i> <strong>Near Optimal:</strong> ใกล้เกณฑ์ ควรควบคุมอาหาร
+                                                    {% elif item.comparison_analysis.ldl.end_value <= 159 %}
+                                                        <i class="fas fa-exclamation-circle text-warning"></i> <strong>Borderline High:</strong> เริ่มเสี่ยง ควรปรับวิถีชีวิต
+                                                    {% else %}
+                                                        <i class="fas fa-times-circle text-danger"></i> <strong>High:</strong> เสี่ยงสูงต่อโรคหลอดเลือดหัวใจ
+                                                    {% endif %}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+
+                                        <!-- HDL Cholesterol Row -->
+                                        {% if item.comparison_analysis.hdl %}
+                                        <tr style="background-color: {{ item.comparison_analysis.hdl.color }}10;">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-arrow-up me-2 text-success"></i>
+                                                    <div>
+                                                        <strong>HDL Cholesterol</strong>
+                                                        <br><small class="text-muted">Good cholesterol</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ item.comparison_analysis.hdl.start_value }}</span>
+                                                <br><small class="text-muted">mg/dL</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">{{ item.comparison_analysis.hdl.end_value }}</span>
+                                                <br><small class="text-muted">mg/dL</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.hdl.color }};">
+                                                    {{ item.comparison_analysis.hdl.text }}
+                                                </span>
+                                                <br><small class="text-muted">
+                                                    {% if item.profile.gender == 'M' %}Normal: >40{% else %}Normal: >50{% endif %}
+                                                </small>
+                                                <br><span class="badge bg-info mt-1">{{ item.comparison_analysis.hdl.change }}</span>
+                                            </td>
+                                            <td>
+                                                <small>
+                                                    {% if item.profile.gender == 'M' %}
+                                                        {% if item.comparison_analysis.hdl.end_value >= 60 %}
+                                                            <i class="fas fa-star text-success"></i> <strong>High (Good):</strong> HDL สูง ป้องกันโรคหัวใจได้ดีมาก
+                                                        {% elif item.comparison_analysis.hdl.end_value >= 40 %}
+                                                            <i class="fas fa-check-circle text-success"></i> <strong>Acceptable:</strong> HDL เพียงพอสำหรับผู้ชาย
+                                                        {% else %}
+                                                            <i class="fas fa-exclamation-circle text-danger"></i> <strong>Low:</strong> HDL ต่ำ เพิ่มความเสี่ยงโรคหัวใจ
+                                                        {% endif %}
+                                                    {% else %}
+                                                        {% if item.comparison_analysis.hdl.end_value >= 60 %}
+                                                            <i class="fas fa-star text-success"></i> <strong>High (Good):</strong> HDL สูง ป้องกันโรคหัวใจได้ดีมาก
+                                                        {% elif item.comparison_analysis.hdl.end_value >= 50 %}
+                                                            <i class="fas fa-check-circle text-success"></i> <strong>Acceptable:</strong> HDL เพียงพอสำหรับผู้หญิง
+                                                        {% else %}
+                                                            <i class="fas fa-exclamation-circle text-danger"></i> <strong>Low:</strong> HDL ต่ำ เพิ่มความเสี่ยงโรคหัวใจ
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+
+                                        <!-- Fasting Blood Sugar Row -->
+                                        {% if item.comparison_analysis.fbs %}
+                                        <tr style="background-color: {{ item.comparison_analysis.fbs.color }}10;">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-cube me-2 text-warning"></i>
+                                                    <div>
+                                                        <strong>Fasting Blood Sugar</strong>
+                                                        <br><small class="text-muted">Blood glucose after fasting</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ item.comparison_analysis.fbs.start_value }}</span>
+                                                <br><small class="text-muted">mg/dL</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">{{ item.comparison_analysis.fbs.end_value }}</span>
+                                                <br><small class="text-muted">mg/dL</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.fbs.color }};">
+                                                    {{ item.comparison_analysis.fbs.text }}
+                                                </span>
+                                                <br><small class="text-muted">Normal: 70-100</small>
+                                                <br><span class="badge bg-info mt-1">{{ item.comparison_analysis.fbs.change }}</span>
+                                            </td>
+                                            <td>
+                                                <small>
+                                                    {% if item.comparison_analysis.fbs.end_value <= 99 %}
+                                                        <i class="fas fa-check-circle text-success"></i> <strong>Normal:</strong> น้ำตาลในเลือดปกติ ไม่เสี่ยงเบาหวาน
+                                                    {% elif item.comparison_analysis.fbs.end_value <= 125 %}
+                                                        <i class="fas fa-exclamation-triangle text-warning"></i> <strong>Prediabetes:</strong> เสี่ยงเบาหวาน ควรปรับวิถีชีวิต
+                                                    {% else %}
+                                                        <i class="fas fa-times-circle text-danger"></i> <strong>Diabetes:</strong> เป็นเบาหวาน ต้องควบคุมอย่างเข้มงวด
+                                                    {% endif %}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+
+                                        <!-- Triglycerides Row -->
+                                        {% if item.comparison_analysis.triglycerides %}
+                                        <tr style="background-color: {{ item.comparison_analysis.triglycerides.color }}10;">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-tint me-2 text-info"></i>
+                                                    <div>
+                                                        <strong>Triglycerides</strong>
+                                                        <br><small class="text-muted">Blood fat level</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-secondary">{{ item.comparison_analysis.triglycerides.start_value }}</span>
+                                                <br><small class="text-muted">mg/dL</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">{{ item.comparison_analysis.triglycerides.end_value }}</span>
+                                                <br><small class="text-muted">mg/dL</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.triglycerides.color }};">
+                                                    {{ item.comparison_analysis.triglycerides.text }}
+                                                </span>
+                                                <br><small class="text-muted">Normal: <150</small>
+                                                <br><span class="badge bg-info mt-1">{{ item.comparison_analysis.triglycerides.change }}</span>
+                                            </td>
+                                            <td>
+                                                <small>
+                                                    {% if item.comparison_analysis.triglycerides.end_value < 150 %}
+                                                        <i class="fas fa-check-circle text-success"></i> <strong>Normal:</strong> ไตรกลีเซอไรด์ปกติ ลดความเสี่ยงโรคหัวใจ
+                                                    {% elif item.comparison_analysis.triglycerides.end_value <= 199 %}
+                                                        <i class="fas fa-exclamation-triangle text-warning"></i> <strong>Borderline High:</strong> เริ่มสูง ควรลดน้ำตาลและแป้ง
+                                                    {% elif item.comparison_analysis.triglycerides.end_value <= 499 %}
+                                                        <i class="fas fa-exclamation-circle text-danger"></i> <strong>High:</strong> สูง เสี่ยงต่อโรคหัวใจและตับ
+                                                    {% else %}
+                                                        <i class="fas fa-times-circle text-danger"></i> <strong>Very High:</strong> สูงมาก เสี่ยงต่อตับอ่อนอักเสบ
+                                                    {% endif %}
+                                                </small>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                    {% comment %} <tbody>
+                        {% for item in latest_overview %}
+                        <tr>
+                            <td class="fw-bold">{{ item.user.username }}</td>
+                            <td>{{ item.profile.firstname }} {{ item.profile.lastname }}</td>
+                            
+                            <!-- BMI Comparison -->
+                            {% if item.comparison_analysis.bmi %}
+                            <td class="text-center">{{ item.comparison_analysis.bmi.start_value }}</td>
+                            <td class="text-center">{{ item.comparison_analysis.bmi.end_value }}</td>
+                            <td class="text-center p-1">
+                                <div class="d-flex flex-column align-items-center">
+                                    <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.bmi.color }}; font-size: 0.65rem;">
+                                        {{ item.comparison_analysis.bmi.change }}
+                                    </span>
+                                    <small style="background-color: {{ item.comparison_analysis.bmi.color }}; color: white; padding: 2px 4px; border-radius: 3px; font-size: 0.6rem;">
+                                        {{ item.comparison_analysis.bmi.text }}
+                                    </small>
+                                    <small class="text-muted mt-1" style="font-size: 0.6rem;">Normal: 18.5-24.9</small>
+                                </div>
+                            </td>
+                            {% else %}
+                            <td class="text-muted text-center">-</td>
+                            <td class="text-muted text-center">-</td>
+                            <td class="text-muted text-center">-</td>
+                            {% endif %}
+
+                            <!-- Fat % Comparison -->
+                            {% if item.comparison_analysis.fat_percent %}
+                            <td class="text-center">{{ item.comparison_analysis.fat_percent.start_value }}%</td>
+                            <td class="text-center">{{ item.comparison_analysis.fat_percent.end_value }}%</td>
+                            <td class="text-center p-1">
+                                <div class="d-flex flex-column align-items-center">
+                                    <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.fat_percent.color }}; font-size: 0.65rem;">
+                                        {{ item.comparison_analysis.fat_percent.change }}
+                                    </span>
+                                    <small style="background-color: {{ item.comparison_analysis.fat_percent.color }}; color: white; padding: 2px 4px; border-radius: 3px; font-size: 0.6rem;">
+                                        {{ item.comparison_analysis.fat_percent.text }}
+                                    </small>
+                                    <small class="text-muted mt-1" style="font-size: 0.6rem;">
+                                        {% if item.profile.gender == 'M' %}Normal: 10-20%{% else %}Normal: 16-25%{% endif %}
+                                    </small>
+                                </div>
+                            </td>
+                            {% else %}
+                            <td class="text-muted text-center">-</td>
+                            <td class="text-muted text-center">-</td>
+                            <td class="text-muted text-center">-</td>
+                            {% endif %}
+
+                            <!-- Visceral Fat Comparison -->
+                            {% if item.comparison_analysis.visceral_fat %}
+                            <td class="text-center">{{ item.comparison_analysis.visceral_fat.start_value }}</td>
+                            <td class="text-center">{{ item.comparison_analysis.visceral_fat.end_value }}</td>
+                            <td class="text-center p-1">
+                                <div class="d-flex flex-column align-items-center">
+                                    <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.visceral_fat.color }}; font-size: 0.65rem;">
+                                        {{ item.comparison_analysis.visceral_fat.change }}
+                                    </span>
+                                    <small style="background-color: {{ item.comparison_analysis.visceral_fat.color }}; color: white; padding: 2px 4px; border-radius: 3px; font-size: 0.6rem;">
+                                        {{ item.comparison_analysis.visceral_fat.text }}
+                                    </small>
+                                    <small class="text-muted mt-1" style="font-size: 0.6rem;">Normal: 1-12</small>
+                                </div>
+                            </td>
+                            {% else %}
+                            <td class="text-muted text-center">-</td>
+                            <td class="text-muted text-center">-</td>
+                            <td class="text-muted text-center">-</td>
+                            {% endif %}
+
+                            <!-- Muscle % Comparison -->
+                            {% if item.comparison_analysis.muscle_percent %}
+                            <td class="text-center">{{ item.comparison_analysis.muscle_percent.start_value }}%</td>
+                            <td class="text-center">{{ item.comparison_analysis.muscle_percent.end_value }}%</td>
+                            <td class="text-center p-1">
+                                <div class="d-flex flex-column align-items-center">
+                                    <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.muscle_percent.color }}; font-size: 0.65rem;">
+                                        {{ item.comparison_analysis.muscle_percent.change }}
+                                    </span>
+                                    <small style="background-color: {{ item.comparison_analysis.muscle_percent.color }}; color: white; padding: 2px 4px; border-radius: 3px; font-size: 0.6rem;">
+                                        {{ item.comparison_analysis.muscle_percent.text }}
+                                    </small>
+                                    <small class="text-muted mt-1" style="font-size: 0.6rem;">
+                                        {% if item.profile.gender == 'M' %}Normal: 38-54%{% else %}Normal: 28-39%{% endif %}
+                                    </small>
+                                </div>
+                            </td>
+                            {% else %}
+                            <td class="text-muted text-center">-</td>
+                            <td class="text-muted text-center">-</td>
+                            <td class="text-muted text-center">-</td>
+                            {% endif %}
+
+                            <!-- Blood Pressure Comparison -->
+                            {% if item.comparison_analysis.blood_pressure_systolic %}
+                            <td class="text-center" style="font-size: 0.8rem;">
+                                {{ item.comparison_analysis.blood_pressure_systolic.start_value }}/{{ item.comparison_analysis.blood_pressure_diastolic.start_value }}
+                            </td>
+                            <td class="text-center" style="font-size: 0.8rem;">
+                                {{ item.comparison_analysis.blood_pressure_systolic.end_value }}/{{ item.comparison_analysis.blood_pressure_diastolic.end_value }}
+                            </td>
+                            <td class="text-center p-1">
+                                <div class="d-flex flex-column align-items-center">
+                                    <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.blood_pressure_systolic.color }}; font-size: 0.65rem;">
+                                        {{ item.comparison_analysis.blood_pressure_systolic.change }}
+                                    </span>
+                                    <small style="background-color: {{ item.comparison_analysis.blood_pressure_systolic.color }}; color: white; padding: 2px 4px; border-radius: 3px; font-size: 0.6rem;">
+                                        {{ item.comparison_analysis.blood_pressure_systolic.text }}
+                                    </small>
+                                    <small class="text-muted mt-1" style="font-size: 0.6rem;">Normal: <120/80</small>
+                                </div>
+                            </td>
+                            {% else %}
+                            <td class="text-muted text-center">-</td>
+                            <td class="text-muted text-center">-</td>
+                            <td class="text-muted text-center">-</td>
+                            {% endif %}
+
+                            <!-- Waist Comparison -->
+                            {% if item.comparison_analysis.waist %}
+                            <td class="text-center">{{ item.comparison_analysis.waist.start_value }}</td>
+                            <td class="text-center">{{ item.comparison_analysis.waist.end_value }}</td>
+                            <td class="text-center p-1">
+                                <div class="d-flex flex-column align-items-center">
+                                    <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.waist.color }}; font-size: 0.65rem;">
+                                        {{ item.comparison_analysis.waist.change }}
+                                    </span>
+                                    <small style="background-color: {{ item.comparison_analysis.waist.color }}; color: white; padding: 2px 4px; border-radius: 3px; font-size: 0.6rem;">
+                                        {{ item.comparison_analysis.waist.text }}
+                                    </small>
+                                    <small class="text-muted mt-1" style="font-size: 0.6rem;">
+                                        {% if item.profile.gender == 'M' %}Normal: <90cm{% else %}Normal: <80cm{% endif %}
+                                    </small>
+                                </div>
+                            </td>
+                            {% else %}
+                            <td class="text-muted text-center">-</td>
+                            <td class="text-muted text-center">-</td>
+                            <td class="text-muted text-center">-</td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody> {% endcomment %}
+                </table>
+            </div>
+
+                <!-- Desktop Additional Health Indices Table (Cholesterol, etc.) -->
+                <div class="mt-4">
+                    <h6><i class="fas fa-tint me-2"></i>Additional Health Indices Comparison</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm comparison-table">
+                            <thead class="table-secondary">
+                                <tr>
+                                    <th rowspan="2" class="align-middle">User</th>
+                                    <th rowspan="2" class="align-middle">Name</th>
+                                    <th colspan="3" class="text-center">Cholesterol</th>
+                                    <th colspan="3" class="text-center">LDL</th>
+                                    <th colspan="3" class="text-center">HDL</th>
+                                    <th colspan="3" class="text-center">FBS</th>
+                                    <th colspan="3" class="text-center">Triglycerides</th>
+                                </tr>
+                                <tr>
+                                    <!-- Cholesterol Headers -->
+                                    <th class="text-center" style="font-size: 0.75rem;">First</th>
+                                    <th class="text-center" style="font-size: 0.75rem;">Last</th>
+                                    <th class="text-center" style="font-size: 0.75rem;">Status</th>
+                                    <!-- LDL Headers -->
+                                    <th class="text-center" style="font-size: 0.75rem;">First</th>
+                                    <th class="text-center" style="font-size: 0.75rem;">Last</th>
+                                    <th class="text-center" style="font-size: 0.75rem;">Status</th>
+                                    <!-- HDL Headers -->
+                                    <th class="text-center" style="font-size: 0.75rem;">First</th>
+                                    <th class="text-center" style="font-size: 0.75rem;">Last</th>
+                                    <th class="text-center" style="font-size: 0.75rem;">Status</th>
+                                    <!-- FBS Headers -->
+                                    <th class="text-center" style="font-size: 0.75rem;">First</th>
+                                    <th class="text-center" style="font-size: 0.75rem;">Last</th>
+                                    <th class="text-center" style="font-size: 0.75rem;">Status</th>
+                                    <!-- Triglycerides Headers -->
+                                    <th class="text-center" style="font-size: 0.75rem;">First</th>
+                                    <th class="text-center" style="font-size: 0.75rem;">Last</th>
+                                    <th class="text-center" style="font-size: 0.75rem;">Status</th>
+                                </tr>
+                            </thead>
+                        <tbody>
+                            {% for item in latest_overview %}
+                            <tr>
+                                <td class="fw-bold">{{ item.user.username }}</td>
+                                <td>{{ item.profile.firstname }} {{ item.profile.lastname }}</td>
+                                
+                                <!-- Cholesterol Comparison -->
+                                {% if item.comparison_analysis.cholesterol %}
+                                <td class="text-center">{{ item.comparison_analysis.cholesterol.start_value }}</td>
+                                <td class="text-center">{{ item.comparison_analysis.cholesterol.end_value }}</td>
+                                <td class="text-center p-1">
+                                    <div class="d-flex flex-column align-items-center">
+                                        <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.cholesterol.color }}; font-size: 0.65rem;">
+                                            {{ item.comparison_analysis.cholesterol.change }}
+                                        </span>
+                                        <small style="background-color: {{ item.comparison_analysis.cholesterol.color }}; color: white; padding: 2px 4px; border-radius: 3px; font-size: 0.6rem;">
+                                            {{ item.comparison_analysis.cholesterol.text }}
+                                        </small>
+                                        <small class="text-muted mt-1" style="font-size: 0.6rem;">Normal: <200</small>
+                                    </div>
+                                </td>
+                                {% else %}
+                                <td class="text-muted text-center">-</td>
+                                <td class="text-muted text-center">-</td>
+                                <td class="text-muted text-center">-</td>
+                                {% endif %}
+
+                                <!-- LDL Comparison -->
+                                {% if item.comparison_analysis.ldl %}
+                                <td class="text-center">{{ item.comparison_analysis.ldl.start_value }}</td>
+                                <td class="text-center">{{ item.comparison_analysis.ldl.end_value }}</td>
+                                <td class="text-center p-1">
+                                    <div class="d-flex flex-column align-items-center">
+                                        <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.ldl.color }}; font-size: 0.65rem;">
+                                            {{ item.comparison_analysis.ldl.change }}
+                                        </span>
+                                        <small style="background-color: {{ item.comparison_analysis.ldl.color }}; color: white; padding: 2px 4px; border-radius: 3px; font-size: 0.6rem;">
+                                            {{ item.comparison_analysis.ldl.text }}
+                                        </small>
+                                        <small class="text-muted mt-1" style="font-size: 0.6rem;">Normal: <100</small>
+                                    </div>
+                                </td>
+                                {% else %}
+                                <td class="text-muted text-center">-</td>
+                                <td class="text-muted text-center">-</td>
+                                <td class="text-muted text-center">-</td>
+                                {% endif %}
+
+                                <!-- HDL Comparison -->
+                                {% if item.comparison_analysis.hdl %}
+                                <td class="text-center">{{ item.comparison_analysis.hdl.start_value }}</td>
+                                <td class="text-center">{{ item.comparison_analysis.hdl.end_value }}</td>
+                                <td class="text-center p-1">
+                                    <div class="d-flex flex-column align-items-center">
+                                        <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.hdl.color }}; font-size: 0.65rem;">
+                                            {{ item.comparison_analysis.hdl.change }}
+                                        </span>
+                                        <small style="background-color: {{ item.comparison_analysis.hdl.color }}; color: white; padding: 2px 4px; border-radius: 3px; font-size: 0.6rem;">
+                                            {{ item.comparison_analysis.hdl.text }}
+                                        </small>
+                                        <small class="text-muted mt-1" style="font-size: 0.6rem;">
+                                            {% if item.profile.gender == 'M' %}Normal: >40{% else %}Normal: >50{% endif %}
+                                        </small>
+                                    </div>
+                                </td>
+                                {% else %}
+                                <td class="text-muted text-center">-</td>
+                                <td class="text-muted text-center">-</td>
+                                <td class="text-muted text-center">-</td>
+                                {% endif %}
+
+                                <!-- FBS Comparison -->
+                                {% if item.comparison_analysis.fbs %}
+                                <td class="text-center">{{ item.comparison_analysis.fbs.start_value }}</td>
+                                <td class="text-center">{{ item.comparison_analysis.fbs.end_value }}</td>
+                                <td class="text-center p-1">
+                                    <div class="d-flex flex-column align-items-center">
+                                        <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.fbs.color }}; font-size: 0.65rem;">
+                                            {{ item.comparison_analysis.fbs.change }}
+                                        </span>
+                                        <small style="background-color: {{ item.comparison_analysis.fbs.color }}; color: white; padding: 2px 4px; border-radius: 3px; font-size: 0.6rem;">
+                                            {{ item.comparison_analysis.fbs.text }}
+                                        </small>
+                                        <small class="text-muted mt-1" style="font-size: 0.6rem;">Normal: 70-100</small>
+                                    </div>
+                                </td>
+                                {% else %}
+                                <td class="text-muted text-center">-</td>
+                                <td class="text-muted text-center">-</td>
+                                <td class="text-muted text-center">-</td>
+                                {% endif %}
+
+                                <!-- Triglycerides Comparison -->
+                                {% if item.comparison_analysis.triglycerides %}
+                                <td class="text-center">{{ item.comparison_analysis.triglycerides.start_value }}</td>
+                                <td class="text-center">{{ item.comparison_analysis.triglycerides.end_value }}</td>
+                                <td class="text-center p-1">
+                                    <div class="d-flex flex-column align-items-center">
+                                        <span class="badge mb-1" style="background-color: {{ item.comparison_analysis.triglycerides.color }}; font-size: 0.65rem;">
+                                            {{ item.comparison_analysis.triglycerides.change }}
+                                        </span>
+                                        <small style="background-color: {{ item.comparison_analysis.triglycerides.color }}; color: white; padding: 2px 4px; border-radius: 3px; font-size: 0.6rem;">
+                                            {{ item.comparison_analysis.triglycerides.text }}
+                                        </small>
+                                        <small class="text-muted mt-1" style="font-size: 0.6rem;">Normal: <150</small>
+                                    </div>
+                                </td>
+                                {% else %}
+                                <td class="text-muted text-center">-</td>
+                                <td class="text-muted text-center">-</td>
+                                <td class="text-muted text-center">-</td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desktop Legend and Summary -->
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>Color Legend</h6>
+                        <div class="row">
+                            <div class="col-lg-3 col-md-6 mb-2">
+                                <span class="badge bg-success me-2">Green</span>
+                                <small>Normal/Improved values</small>
+                            </div>
+                            <div class="col-lg-3 col-md-6 mb-2">
+                                <span class="badge bg-warning me-2">Orange</span>
+                                <small>Slightly out of range</small>
+                            </div>
+                            <div class="col-lg-3 col-md-6 mb-2">
+                                <span class="badge bg-danger me-2">Red</span>
+                                <small>Significantly abnormal</small>
+                            </div>
+                            <div class="col-lg-3 col-md-6 mb-2">
+                                <small><strong>Change</strong> = Last Value - First Value</small>
+                            </div>
+                        </div>
+                        <div class="row mt-2 d-none d-lg-block">
+                            <div class="col-12">
+                                <small class="text-muted">
+                                    <i class="fas fa-desktop me-1"></i>Desktop view showing complete comparison table with all health indices.
+                                    Switch to mobile for card-based layout.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Latest Health Overview Section - Comprehensive Analysis -->
+    {% if latest_overview %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="section-title d-flex justify-content-between align-items-center">
+                <div>
+                    <h4><i class="fas fa-eye me-2"></i>Latest Health Overview - Complete Analysis</h4>
+                    <small class="text-muted">Comprehensive health data analysis similar to individual history view</small>
+                </div>
+                <div>
+                    <a href="?export=pdf&section=health_overview" class="btn btn-danger">
+                        <i class="fas fa-file-pdf me-2"></i>Export to PDF
+                    </a>
+                </div>
+            </div>
+            
+            {% for item in latest_overview|slice:":8" %}
+            <div class="card mb-3 mb-md-4" style="border-left: 5px solid {% if item.health_score >= 80 %}#28a745{% elif item.health_score >= 60 %}#ffc107{% else %}#dc3545{% endif %};">
+                <div class="card-header" style="background: linear-gradient(135deg, {% if item.health_score >= 80 %}#d4edda{% elif item.health_score >= 60 %}#fff3cd{% else %}#f8d7da{% endif %} 0%, #f8f9fa 100%);">
+                    <!-- Mobile-First Header Layout -->
+                    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between">
+                        <div class="d-flex align-items-center mb-2 mb-md-0">
+                            <div class="me-3">
+                                <i class="fas fa-user-circle fa-2x d-none d-md-inline" style="color: {% if item.health_score >= 80 %}#28a745{% elif item.health_score >= 60 %}#ffc107{% else %}#dc3545{% endif %};"></i>
+                                <i class="fas fa-user-circle fa-lg d-md-none" style="color: {% if item.health_score >= 80 %}#28a745{% elif item.health_score >= 60 %}#ffc107{% else %}#dc3545{% endif %};"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1 h6 h5-md">{{ item.profile.firstname }} {{ item.profile.lastname }}</h5>
+                                <!-- Mobile: Simplified Info -->
+                                <small class="text-muted d-md-none" style="font-size: 0.75rem;">
+                                    {{ item.age }}ปี
+                                    {{ item.gender_display }}
+                                    {{ item.total_records }}รายการ
+                                </small>
+                                <!-- Desktop: Full Info -->
+                                <small class="text-muted d-none d-md-block">
+                                    {{ item.user.username }} |
+                                    {{ item.age }} ปี |
+                                    {{ item.gender_display }} |
+                                    {{ item.total_records }} รายการ |
+                                    {{ item.recorded_date|date:"M d, Y H:i" }}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between w-100 w-md-auto">
+                            <div class="text-center text-md-end">
+                                <div class="health-score h4 h3-md fw-bold" style="color: {% if item.health_score >= 80 %}#28a745{% elif item.health_score >= 60 %}#ffc107{% else %}#dc3545{% endif %}; font-size: 1.5rem;">
+                                    {{ item.health_score|floatformat:0 }}%
+                                </div>
+                                <div class="small text-muted">Health Score</div>
+                            </div>
+                            <div class="ms-3">
+                                <span class="badge" style="background-color: {% if item.risk_level == 'low' %}#28a745{% elif item.risk_level == 'medium' %}#ffc107{% else %}#dc3545{% endif %}; font-size: 0.75rem;">
+                                    {% if item.risk_level == 'low' %}เสี่ยงต่ำ{% elif item.risk_level == 'medium' %}เสี่ยงปานกลาง{% else %}เสี่ยงสูง{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Health Metrics Summary -->
+                        <div class="col-lg-12">
+                            <h6 class="mb-3"><i class="fas fa-heartbeat me-2"></i>ข้อมูลสุขภาพปัจจุบัน</h6>
+                            <!-- Mobile-Optimized Health Metrics Grid -->
+                            <div class="row g-2">
+                                {% for metric_name, metric_data in item.health_metrics.items %}
+                                <div class="col-6 col-sm-4 col-md-6 col-lg-4">
+                                    <div class="card border-0" style="background-color: {{ metric_data.status.color }}20;">
+                                        <div class="card-body p-2 p-md-3">
+                                            <div class="text-center text-md-start">
+                                                <div class="d-flex d-md-block align-items-center justify-content-between">
+                                                    <div>
+                                                        <div class="small fw-bold mb-1" style="font-size: 0.75rem;">
+                                                            {% if metric_name == 'bmi' %}<i class="fas fa-weight"></i> BMI
+                                                            {% elif metric_name == 'blood_pressure' %}<i class="fas fa-heartbeat"></i> ความดัน
+                                                            {% elif metric_name == 'fat_percent' %}<i class="fas fa-percentage"></i> เปอร์เซ็นต์ไขมัน
+                                                            {% elif metric_name == 'visceral_fat' %}<i class="fas fa-circle"></i> ไขมันในช่องท้อง
+                                                            {% elif metric_name == 'muscle_percent' %}<i class="fas fa-dumbbell"></i> มวลกล้ามเนื้อ
+                                                            {% elif metric_name == 'waist' %}<i class="fas fa-ruler"></i> รอบเอว
+                                                            {% elif metric_name == 'cholesterol' %}<i class="fas fa-tint"></i> คอเลสเตอรอล
+                                                            {% elif metric_name == 'ldl' %}<i class="fas fa-tint"></i> LDL
+                                                            {% elif metric_name == 'hdl' %}<i class="fas fa-tint"></i> HDL
+                                                            {% elif metric_name == 'fbs' %}<i class="fas fa-cube"></i> น้ำตาลในเลือด (FBS)
+                                                            {% elif metric_name == 'triglycerides' %}<i class="fas fa-tint"></i> ไตรกลีเซอไรด์
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="fw-bold" style="font-size: 0.9rem;">{{ metric_data.value }}{{ metric_data.unit }}</div>
+                                                    </div>
+                                                    <div class="text-end d-md-none">
+                                                        <span class="badge" style="background-color: {{ metric_data.status.color }}; font-size: 0.6em;">
+                                                            {{ metric_data.status.text }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div class="d-none d-md-block mt-1">
+                                                    <span class="badge w-100" style="background-color: {{ metric_data.status.color }}; font-size: 0.7em;">
+                                                        {{ metric_data.status.text }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Health Analysis Overview -->
+                        <div class="col-lg-12 mt-3">
+                            <h6 class="mb-3"><i class="fas fa-stethoscope me-2"></i>การวิเคราะห์สุขภาพ</h6>
+                            <div class="health-analysis-container">
+                                <div class="row g-2">
+                                    {% for analysis in item.health_overview_analysis %}
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="card border-0" style="background-color: {% if analysis.color == 'success' %}#28a74520{% elif analysis.color == 'warning' %}#ffc10720{% elif analysis.color == 'danger' %}#dc354520{% else %}#6c757d20{% endif %};">
+                                            <div class="card-body p-2">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="me-2 mt-1">
+                                                        <i class="fas {% if analysis.color == 'success' %}fa-check-circle{% elif analysis.color == 'warning' %}fa-exclamation-triangle{% elif analysis.color == 'danger' %}fa-times-circle{% else %}fa-info-circle{% endif %}" 
+                                                           style="color: {% if analysis.color == 'success' %}#28a745{% elif analysis.color == 'warning' %}#ffc107{% elif analysis.color == 'danger' %}#dc3545{% else %}#6c757d{% endif %}; font-size: 1.1em;"></i>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <div class="small fw-bold mb-1" style="color: {% if analysis.color == 'success' %}#155724{% elif analysis.color == 'warning' %}#856404{% elif analysis.color == 'danger' %}#721c24{% else %}#495057{% endif %};">
+                                                            {% if analysis.color == 'success' %}สถานะดี{% elif analysis.color == 'warning' %}ต้องระวัง{% elif analysis.color == 'danger' %}เสี่ยงสูง{% else %}ข้อมูล{% endif %}
+                                                        </div>
+                                                        <div style="font-size: 0.8em; line-height: 1.3; color: #495057;">
+                                                            {{ analysis.text|truncatechars:150 }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <span class="badge" style="background-color: {% if analysis.color == 'success' %}#28a745{% elif analysis.color == 'warning' %}#ffc107{% elif analysis.color == 'danger' %}#dc3545{% else %}#6c757d{% endif %}; font-size: 0.65em;">
+                                                            {% if analysis.color == 'success' %}✓{% elif analysis.color == 'warning' %}!{% elif analysis.color == 'danger' %}✗{% else %}i{% endif %}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Indicator -->
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold">สุขภาพโดยรวม:</span>
+                                <span class="text-muted">{{ item.normal_count }}/{{ item.total_count }} ตัวชี้วัด</span>
+                            </div>
+                            <div class="progress" style="height: 12px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     style="width: {{ item.health_score }}%; background-color: {% if item.health_score >= 80 %}#28a745{% elif item.health_score >= 60 %}#ffc107{% else %}#dc3545{% endif %};">
+                                    {{ item.health_score|floatformat:0 }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Comparison Analysis (if available) -->
+                    {% if item.comparison_analysis %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6 class="mb-2"><i class="fas fa-chart-line me-2"></i>เปรียบเทียบการเปลี่ยนแปลง (จากครั้งแรก)</h6>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <div class="small">
+                                        <strong>BMI:</strong> {{ item.comparison_analysis.bmi.text }}
+                                        <span class="badge bg-secondary ms-1">{{ item.comparison_analysis.bmi.start_value }} → {{ item.comparison_analysis.bmi.end_value }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="small">
+                                        <strong>ไขมัน%:</strong> {{ item.comparison_analysis.fat_percent.text }}
+                                        <span class="badge bg-secondary ms-1">{{ item.comparison_analysis.fat_percent.start_value }}% → {{ item.comparison_analysis.fat_percent.end_value }}%</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="small">
+                                        <strong>กล้ามเนื้อ%:</strong> {{ item.comparison_analysis.muscle_percent.text }}
+                                        <span class="badge bg-secondary ms-1">{{ item.comparison_analysis.muscle_percent.start_value }}% → {{ item.comparison_analysis.muscle_percent.end_value }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% if latest_overview|length > 8 %}
+            <div class="text-center">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    แสดง 8 รายการแรก จากทั้งหมด {{ latest_overview|length }} รายการ 
+                    <br><small>ใช้ฟิลเตอร์การค้นหาเพื่อดูข้อมูลเฉพาะกลุ่ม</small>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Health Analysis Overview Section - Mobile Optimized -->
+    {% if latest_overview %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="section-title">
+                <h4><i class="fas fa-stethoscope me-2"></i>Health Analysis Overview</h4>
+                <small class="text-muted d-block">Comprehensive health analysis for all filtered users</small>
+            </div>
+            
+            <!-- Mobile-Friendly Analysis Cards -->
+            <div class="row g-2 g-md-3">
+                {% for item in latest_overview %}
+                {% for analysis in item.health_overview_analysis %}
+                <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+                    <div class="card border-0 mobile-analysis-card h-100" 
+                         style="background: linear-gradient(135deg, {% if analysis.color == 'success' %}#d4edda{% elif analysis.color == 'warning' %}#fff3cd{% elif analysis.color == 'danger' %}#f8d7da{% else %}#e2e3e5{% endif %} 0%, #ffffff 100%); 
+                                border-left: 5px solid {% if analysis.color == 'success' %}#28a745{% elif analysis.color == 'warning' %}#ffc107{% elif analysis.color == 'danger' %}#dc3545{% else %}#6c757d{% endif %};">
+                        <div class="card-body p-3">
+                            <!-- Status Header -->
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                         style="width: 32px; height: 32px; background-color: {% if analysis.color == 'success' %}#28a745{% elif analysis.color == 'warning' %}#ffc107{% elif analysis.color == 'danger' %}#dc3545{% else %}#6c757d{% endif %};">
+                                        <i class="fas {% if analysis.color == 'success' %}fa-check{% elif analysis.color == 'warning' %}fa-exclamation{% elif analysis.color == 'danger' %}fa-times{% else %}fa-info{% endif %} text-white" style="font-size: 0.8rem;"></i>
+                                    </div>
+                                    <span class="badge" style="background-color: {% if analysis.color == 'success' %}#28a745{% elif analysis.color == 'warning' %}#ffc107{% elif analysis.color == 'danger' %}#dc3545{% else %}#6c757d{% endif %}; font-size: 0.7rem;">
+                                        {% if analysis.color == 'success' %}ดี{% elif analysis.color == 'warning' %}ระวัง{% elif analysis.color == 'danger' %}เสี่ยง{% else %}ข้อมูล{% endif %}
+                                    </span>
+                                </div>
+                                <small class="text-muted">
+                                    <i class="fas fa-user" style="font-size: 0.7rem;"></i>
+                                </small>
+                            </div>
+                            
+                            <!-- User Info -->
+                            <div class="mb-2">
+                                <h6 class="mb-1" style="font-size: 0.9rem; color: #495057;">
+                                    {{ item.profile.firstname }} {{ item.profile.lastname }}
+                                </h6>
+                                <small class="text-muted" style="font-size: 0.75rem;">
+                                    <i class="fas fa-calendar me-1"></i>{{ item.recorded_date|date:"M d" }}
+                                    <span class="ms-2">
+                                        <i class="fas fa-chart-bar me-1"></i>{{ item.health_score|floatformat:0 }}%
+                                    </span>
+                                </small>
+                            </div>
+                            
+                            <!-- Analysis Text -->
+                            <div class="analysis-text">
+                                <p class="mb-0" style="font-size: 0.82rem; line-height: 1.3; color: #495057;">
+                                    {{ analysis.text|truncatechars:120 }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endfor %}
+            </div>
+            
+            <!-- Mobile Summary Info -->
+            <div class="row mt-3 d-md-none">
+                <div class="col-12">
+                    <div class="alert alert-info py-2 px-3" style="font-size: 0.85rem;">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>{{ latest_overview|length }}</strong> users analyzed • 
+                        Scroll horizontally to view all analysis cards
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Comprehensive Results Section -->
+    {% if all_records %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="section-title">
+                <h4><i class="fas fa-chart-area me-2"></i>Search Results - Comprehensive Data Analysis</h4>
+                <small class="text-muted">Detailed health data visualization and analysis for filtered users</small>
+            </div>
+
+            <!-- Individual User Analysis Graphs and Comparisons -->
+            {% for user_data in user_analysis_data %}
+            <div class="card mb-4" style="border-left: 4px solid #4a90e2;">
+                <div class="card-header bg-light">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0">
+                                {{ user_data.profile.firstname }} {{ user_data.profile.lastname }}
+                                <span class="text-muted">({{ user_data.user.username }})</span>
+                            </h5>
+                            <small class="text-muted">
+                                อายุ: {{ user_data.age }}
+                                เพศ: {{ user_data.profile.gender }}
+                                รายการ: {{ user_data.records_count }}
+                            </small>
+                        </div>
+                        <div class="col-auto">
+                            <span class="badge fs-6" style="background-color: {% if user_data.health_score >= 80 %}#28a745{% elif user_data.health_score >= 60 %}#ffc107{% else %}#dc3545{% endif %};">
+                                Health Score: {{ user_data.health_score|floatformat:0 }}%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Individual User Health Progress Graph Section -->
+                    {% if user_data.graph_base64 %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-0" style="background: linear-gradient(135deg, #e3f2fd 0%, #f8f9fa 100%);">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>Health Progress Graph - Individual Analysis</h6>
+                                </div>
+                                <div class="card-body p-3">
+                                    <img src="data:image/png;base64,{{ user_data.graph_base64 }}" 
+                                         class="img-fluid w-100" 
+                                         alt="Health Progress for {{ user_data.profile.firstname }}"
+                                         style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Individual User Comparison Table Section -->
+                    {% if user_data.comparison_data %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-0" style="background: linear-gradient(135deg, #f3e5f5 0%, #f8f9fa 100%);">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="fas fa-balance-scale me-2"></i>Individual Comparison Analysis (First vs Latest)</h6>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered mb-0">
+                                            <thead class="table-primary">
+                                                <tr>
+                                                    <th style="width: 20%;">Health Metric</th>
+                                                    <th style="width: 20%;">First Record</th>
+                                                    <th style="width: 20%;">Latest Record</th>
+                                                    <th style="width: 15%;">Change</th>
+                                                    <th style="width: 25%;">Current Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><strong><i class="fas fa-weight me-1"></i>BMI</strong></td>
+                                                    <td>{{ user_data.comparison_data.bmi.start_value }}</td>
+                                                    <td>{{ user_data.comparison_data.bmi.end_value }}</td>
+                                                    <td><span class="badge bg-secondary">{{ user_data.comparison_data.bmi.change }}</span></td>
+                                                    <td style="background-color: {{ user_data.comparison_data.bmi.color }}; color: white; font-size: 0.85em;">
+                                                        <strong>{{ user_data.comparison_data.bmi.text }}</strong>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong><i class="fas fa-percentage me-1"></i>Fat %</strong></td>
+                                                    <td>{{ user_data.comparison_data.fat_percent.start_value }}%</td>
+                                                    <td>{{ user_data.comparison_data.fat_percent.end_value }}%</td>
+                                                    <td><span class="badge bg-secondary">{{ user_data.comparison_data.fat_percent.change }}</span></td>
+                                                    <td style="background-color: {{ user_data.comparison_data.fat_percent.color }}; color: white; font-size: 0.85em;">
+                                                        <strong>{{ user_data.comparison_data.fat_percent.text }}</strong>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong><i class="fas fa-circle me-1"></i>Visceral Fat</strong></td>
+                                                    <td>{{ user_data.comparison_data.visceral_fat.start_value }}</td>
+                                                    <td>{{ user_data.comparison_data.visceral_fat.end_value }}</td>
+                                                    <td><span class="badge bg-secondary">{{ user_data.comparison_data.visceral_fat.change }}</span></td>
+                                                    <td style="background-color: {{ user_data.comparison_data.visceral_fat.color }}; color: white; font-size: 0.85em;">
+                                                        <strong>{{ user_data.comparison_data.visceral_fat.text }}</strong>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong><i class="fas fa-dumbbell me-1"></i>Muscle %</strong></td>
+                                                    <td>{{ user_data.comparison_data.muscle_percent.start_value }}%</td>
+                                                    <td>{{ user_data.comparison_data.muscle_percent.end_value }}%</td>
+                                                    <td><span class="badge bg-secondary">{{ user_data.comparison_data.muscle_percent.change }}</span></td>
+                                                    <td style="background-color: {{ user_data.comparison_data.muscle_percent.color }}; color: white; font-size: 0.85em;">
+                                                        <strong>{{ user_data.comparison_data.muscle_percent.text }}</strong>
+                                                    </td>
+                                                </tr>
+                                                {% if user_data.comparison_data.blood_pressure_systolic %}
+                                                <tr>
+                                                    <td><strong><i class="fas fa-heartbeat me-1"></i>BP Systolic</strong></td>
+                                                    <td>{{ user_data.comparison_data.blood_pressure_systolic.start_value }}</td>
+                                                    <td>{{ user_data.comparison_data.blood_pressure_systolic.end_value }}</td>
+                                                    <td><span class="badge bg-secondary">{{ user_data.comparison_data.blood_pressure_systolic.change }}</span></td>
+                                                    <td style="background-color: {{ user_data.comparison_data.blood_pressure_systolic.color }}; color: white; font-size: 0.85em;">
+                                                        <strong>{{ user_data.comparison_data.blood_pressure_systolic.text }}</strong>
+                                                    </td>
+                                                </tr>
+                                                {% endif %}
+                                                {% if user_data.comparison_data.waist %}
+                                                <tr>
+                                                    <td><strong><i class="fas fa-ruler me-1"></i>Waist</strong></td>
+                                                    <td>{{ user_data.comparison_data.waist.start_value }} cm</td>
+                                                    <td>{{ user_data.comparison_data.waist.end_value }} cm</td>
+                                                    <td><span class="badge bg-secondary">{{ user_data.comparison_data.waist.change }}</span></td>
+                                                    <td style="background-color: {{ user_data.comparison_data.waist.color }}; color: white; font-size: 0.85em;">
+                                                        <strong>{{ user_data.comparison_data.waist.text }}</strong>
+                                                    </td>
+                                                </tr>
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Individual User Health Summary -->
+                    {% if user_data.summary_info %}
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6><i class="fas fa-clipboard-list me-2"></i>Health Summary</h6>
+                            <div class="row">
+                                <div class="col-lg-3 col-md-6 mb-2">
+                                    <div class="alert py-2 px-3" style="background-color: {{ user_data.comparison_data.bmi.color }}; color: white; font-size: 0.85em;">
+                                        <strong>BMI:</strong> {{ user_data.summary_info.bmi }}
+                                    </div>
+                                </div>
+                                {% if user_data.summary_info.waist %}
+                                <div class="col-lg-3 col-md-6 mb-2">
+                                    <div class="alert py-2 px-3" style="background-color: {{ user_data.comparison_data.waist.color }}; color: white; font-size: 0.85em;">
+                                        <strong>Waist:</strong> {{ user_data.summary_info.waist }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% if user_data.summary_info.blood_pressure_systolic %}
+                                <div class="col-lg-3 col-md-6 mb-2">
+                                    <div class="alert py-2 px-3" style="background-color: {{ user_data.comparison_data.blood_pressure_systolic.color }}; color: white; font-size: 0.85em;">
+                                        <strong>BP:</strong> {{ user_data.summary_info.blood_pressure_systolic }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                <div class="col-lg-3 col-md-6 mb-2">
+                                    <div class="alert py-2 px-3" style="background-color: {{ user_data.comparison_data.fat_percent.color }}; color: white; font-size: 0.85em;">
+                                        <strong>Fat%:</strong> {{ user_data.summary_info.fat_percent }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Individual User Records -->
+                    <div class="mt-3">
+                        <h6><i class="fas fa-list me-2"></i>Complete Records History</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>BMI</th>
+                                        <th>Fat%</th>
+                                        <th>Visceral</th>
+                                        <th>Muscle%</th>
+                                        <th>BP</th>
+                                        <th>Waist</th>
+                                        <th>Chol</th>
+                                        <th>LDL</th>
+                                        <th>HDL</th>
+                                        <th>FBS</th>
+                                        <th>Trigly</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for record in user_data.records %}
+                                    <tr id="record-{{ record.id }}">
+                                        <td>{{ record.recorded_at|date:"Y-m-d H:i" }}</td>
+                                        <td>{{ record.bmi|floatformat:1 }}</td>
+                                        <td>{{ record.fat_percent|floatformat:1 }}%</td>
+                                        <td>{{ record.visceral_fat|floatformat:1 }}</td>
+                                        <td>{{ record.muscle_percent|floatformat:1 }}%</td>
+                                        <td>{{ record.blood_pressure_systolic }}/{{ record.blood_pressure_diastolic }}</td>
+                                        <td>{{ record.waist|floatformat:1 }}</td>
+                                        <td>{% if record.cholesterol %}{{ record.cholesterol }}{% else %}-{% endif %}</td>
+                                        <td>{% if record.ldl %}{{ record.ldl }}{% else %}-{% endif %}</td>
+                                        <td>{% if record.hdl %}{{ record.hdl }}{% else %}-{% endif %}</td>
+                                        <td>{% if record.fbs %}{{ record.fbs }}{% else %}-{% endif %}</td>
+                                        <td>{% if record.triglycerides %}{{ record.triglycerides }}{% else %}-{% endif %}</td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{% url 'health_app:update_record' record.id %}" 
+                                                   class="btn btn-outline-primary btn-sm" 
+                                                   title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" 
+                                                        class="btn btn-outline-danger btn-sm" 
+                                                        onclick="deleteRecord({{ record.id }}, '{{ record.user.username }}')" 
+                                                        title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- CRUD Records Table (Summary View) -->
+    <div class="row">
+        <div class="col-12">
+            <div class="section-title d-flex justify-content-between align-items-center">
+                <div>
+                    <h4><i class="fas fa-database me-2"></i>All Health Records Summary (CRUD Operations)</h4>
+                    <small class="text-muted">Quick overview - Showing latest 100 records in descending order</small>
+                </div>
+                <div>
+                    <a href="?export=excel&section=crud_all" class="btn btn-success">
+                        <i class="fas fa-file-excel me-2"></i>Export All CRUD Records
+                    </a>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped crud-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Name</th>
+                            <th>BMI</th>
+                            <th>Fat%</th>
+                            <th>Visceral</th>
+                            <th>Muscle%</th>
+                            <th>BP</th>
+                            <th>Waist</th>
+                            <th>Recorded Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in all_records %}
+                        <tr id="record-{{ record.id }}">
+                            <td>{{ record.id }}</td>
+                            <td>{{ record.user.username }}</td>
+                            <td>{{ record.user.profile.firstname }} {{ record.user.profile.lastname }}</td>
+                            <td>{{ record.bmi|floatformat:1 }}</td>
+                            <td>{{ record.fat_percent|floatformat:1 }}</td>
+                            <td>{{ record.visceral_fat|floatformat:1 }}</td>
+                            <td>{{ record.muscle_percent|floatformat:1 }}</td>
+                            <td>{{ record.blood_pressure_systolic }}/{{ record.blood_pressure_diastolic }}</td>
+                            <td>{{ record.waist|floatformat:1 }}</td>
+                            <td>{{ record.recorded_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'health_app:update_record' record.id %}" 
+                                       class="btn btn-outline-primary btn-action" 
+                                       title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-outline-danger btn-action" 
+                                            onclick="deleteRecord({{ record.id }}, '{{ record.user.username }}')" 
+                                            title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not search_applied %}
+    <!-- No Search Applied -->
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle me-2"></i>
+                Please use the search filters above to analyze health data and generate comprehensive reports.
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this health record?</p>
+                <p><strong>User:</strong> <span id="deleteUsername"></span></p>
+                <p class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>This action cannot be undone!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <a href="#" id="confirmDeleteBtn" class="btn btn-danger">Delete Record</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function deleteRecord(recordId, username) {
+    document.getElementById('deleteUsername').textContent = username;
+    document.getElementById('confirmDeleteBtn').href = 
+        "{% url 'health_app:delete_record' 0 %}".replace('0', recordId);
+    
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+// Auto-hide alerts after 5 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            if (alert.classList.contains('alert-success') || alert.classList.contains('alert-info')) {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            }
+        });
+    }, 5000);
+});
+
+// Add loading state to search button
+document.querySelector('form').addEventListener('submit', function() {
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Analyzing...';
+    submitBtn.disabled = true;
+});
+
+// User Comparison Table Functions
+function showUserComparison() {
+    const selector = document.getElementById('userSelector');
+    const selectedUserId = selector.value;
+    
+    // Hide all comparison tables
+    const allTables = document.querySelectorAll('.user-comparison-table');
+    allTables.forEach(table => {
+        table.style.display = 'none';
+    });
+    
+    // Show selected user's comparison table
+    if (selectedUserId) {
+        const selectedTable = document.getElementById('userComparison' + selectedUserId);
+        if (selectedTable) {
+            selectedTable.style.display = 'block';
+            
+            // Smooth scroll to table
+            selectedTable.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+            
+            // Add highlight effect
+            selectedTable.style.boxShadow = '0 0 20px rgba(74, 144, 226, 0.3)';
+            setTimeout(() => {
+                selectedTable.style.boxShadow = '';
+            }, 2000);
+        }
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block title %}แดชบอร์ด - Health Progress{% endblock %}
+
+{% block content %}
+<h2 class="mb-4 text-success fw-bold">
+    <i class="bi bi-speedometer2"></i> แดชบอร์ดสุขภาพของคุณ
+</h2>
+
+<!-- Personal Info Card -->
+<div class="card mb-4 shadow-lg" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 3px solid #10b981;">
+    <div class="card-header bg-success text-white">
+        <h4 class="mb-0"><i class="bi bi-person-badge-fill"></i> ข้อมูลส่วนบุคคล</h4>
+    </div>
+    <div class="card-body p-4">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <div class="alert alert-light mb-0 shadow-sm">
+                    <strong><i class="bi bi-person-fill text-success"></i> ชื่อ-นามสกุล:</strong><br>
+                    <span class="h5">{{ profile.firstname }} {{ profile.lastname }}</span>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="alert alert-light mb-0 shadow-sm">
+                    <strong><i class="bi bi-calendar-heart text-info"></i> อายุ:</strong><br>
+                    <span class="h5">{{ profile.age }} ปี</span>
+                    {% if age_details %}
+                    <div class="d-flex gap-2 mt-2">
+                        <span class="badge bg-success">{{ age_details.years }} ปี</span>
+                        <span class="badge bg-info">{{ age_details.months }} เดือน</span>
+                        <span class="badge bg-warning">{{ age_details.days }} วัน</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="alert alert-light mb-0 shadow-sm">
+                    <strong><i class="bi bi-gender-ambiguous text-primary"></i> เพศ:</strong><br>
+                    <span class="h5">{{ profile.get_gender_display }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Health Metrics -->
+<div class="row mb-4">
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="metric-card shadow-lg" style="background: {{ bmi_status.color }};">
+            <h6><i class="bi bi-speedometer"></i> BMI (ดัชนีมวลกาย)</h6>
+            <h3 class="fw-bold">{{ latest_record.bmi }}</h3>
+            <p class="mb-2 fw-bold">{{ bmi_status.text }}</p>
+            <small>{{ bmi_status.risk }}</small>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="metric-card shadow-lg" style="background: {{ fat_status.color }};">
+            <h6><i class="bi bi-percent"></i> เปอร์เซ็นต์ไขมัน</h6>
+            <h3 class="fw-bold">{{ latest_record.fat_percent }}%</h3>
+            <p class="mb-0 fw-bold">{{ fat_status.text }}</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="metric-card shadow-lg" style="background: {{ visceral_status.color }};">
+            <h6><i class="bi bi-droplet-fill"></i> ไขมันในช่องท้อง</h6>
+            <h3 class="fw-bold">{{ latest_record.visceral_fat }}</h3>
+            <p class="mb-0 fw-bold">{{ visceral_status.text }}</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="metric-card shadow-lg" style="background: {{ muscle_status.color }};">
+            <h6><i class="bi bi-diagram-3-fill"></i> เปอร์เซ็นต์กล้ามเนื้อ</h6>
+            <h3 class="fw-bold">{{ latest_record.muscle_percent }}%</h3>
+            <p class="mb-0 fw-bold">{{ muscle_status.text }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Blood Pressure, Waist, Cholesterol -->
+<div class="row mb-4">
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="metric-card shadow-lg" style="background: {{ blood_pressure_status.color }};">
+            <h6><i class="bi bi-heart-pulse-fill"></i> ความดันโลหิต</h6>
+            <h3 class="fw-bold">{{ latest_record.blood_pressure_systolic }}/{{ latest_record.blood_pressure_diastolic }}</h3>
+            <p class="mb-2 fw-bold">{{ blood_pressure_status.text }}</p>
+            <small>ปกติ: {{ blood_pressure_status.normal_range }} mmHg</small>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="metric-card shadow-lg" style="background: {{ waist_status.color }};">
+            <h6><i class="bi bi-rulers"></i> เส้นรอบเอว</h6>
+            <h3 class="fw-bold">{{ latest_record.waist }} cm</h3>
+            <p class="mb-2 fw-bold">{{ waist_status.text }}</p>
+            <small>ปกติ: {{ waist_status.normal_range }} cm</small>
+        </div>
+    </div>
+    {% if latest_record.cholesterol %}
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="metric-card shadow-lg" style="background: {{ cholesterol_status.color }};">
+            <h6><i class="bi bi-capsule"></i> Cholesterol</h6>
+            <h3 class="fw-bold">{{ latest_record.cholesterol }} mg/dL</h3>
+            <p class="mb-2 fw-bold">{{ cholesterol_status.text }}</p>
+            <small>ปกติ: {{ cholesterol_status.normal_range }} mg/dL</small>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Blood Work Details -->
+<div class="row mb-4">
+    {% if latest_record.ldl %}
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="metric-card shadow-lg" style="background: {{ ldl_status.color }};">
+            <h6><i class="bi bi-bandaid"></i> LDL</h6>
+            <h3 class="fw-bold">{{ latest_record.ldl }} mg/dL</h3>
+            <p class="mb-2 fw-bold">{{ ldl_status.text }}</p>
+            <small>ปกติ: {{ ldl_status.normal_range }} mg/dL</small>
+        </div>
+    </div>
+    {% endif %}
+    {% if latest_record.hdl %}
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="metric-card shadow-lg" style="background: {{ hdl_status.color }};">
+            <h6><i class="bi bi-shield-fill-check"></i> HDL</h6>
+            <h3 class="fw-bold">{{ latest_record.hdl }} mg/dL</h3>
+            <p class="mb-2 fw-bold">{{ hdl_status.text }}</p>
+            <small>ปกติ: {{ hdl_status.normal_range }} mg/dL</small>
+        </div>
+    </div>
+    {% endif %}
+    {% if latest_record.fbs %}
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="metric-card shadow-lg" style="background: {{ fbs_status.color }};">
+            <h6><i class="bi bi-thermometer-half"></i> FBS (น้ำตาลในเลือด)</h6>
+            <h3 class="fw-bold">{{ latest_record.fbs }} mg/dL</h3>
+            <p class="mb-2 fw-bold">{{ fbs_status.text }}</p>
+            <small>ปกติ: {{ fbs_status.normal_range }} mg/dL</small>
+        </div>
+    </div>
+    {% endif %}
+    {% if latest_record.triglycerides %}
+    <div class="col-md-6 col-lg-3 mb-3">
+        <div class="metric-card shadow-lg" style="background: {{ triglycerides_status.color }};">
+            <h6><i class="bi bi-water"></i> Triglycerides</h6>
+            <h3 class="fw-bold">{{ latest_record.triglycerides }} mg/dL</h3>
+            <p class="mb-2 fw-bold">{{ triglycerides_status.text }}</p>
+            <small>ปกติ: {{ triglycerides_status.normal_range }} mg/dL</small>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Health Recommendations -->
+<div class="card shadow-lg">
+    <div class="card-header bg-warning text-dark">
+        <h4 class="mb-0">
+            <i class="bi bi-lightbulb-fill"></i> คำแนะนำด้านสุขภาพ
+        </h4>
+        <p class="mb-0 mt-2">สำหรับค่าที่ผิดปกติ - วางแผนปรับพฤติกรรมการใช้ชีวิตร่วมกับที่ปรึกษาด้านสุขภาพ</p>
+    </div>
+    <div class="card-body p-4">
+        <div class="alert alert-info mb-3 shadow-sm">
+            <i class="bi bi-info-circle-fill"></i>
+            <strong>หมายเหตุ:</strong> ควรปรับเปลี่ยนในด้าน การกิน ออกกำลังกาย นอนหลับ จัดการความเครียด หลีกเลี่ยงสารพิษ บุหรี่ และแอลกอฮอล์
+        </div>
+        
+        {% for overview_item in health_overview %}
+            {% if overview_item.text %}
+                <div class="alert alert-{{ overview_item.color }} mb-3 shadow-sm" style="font-size: 1.125rem; border-left: 5px solid 
+                     {% if overview_item.color == 'success' %}#22c55e
+                     {% elif overview_item.color == 'warning' %}#f59e0b
+                     {% elif overview_item.color == 'danger' %}#ef4444
+                     {% else %}#3b82f6{% endif %};">
+                    {% if overview_item.color == 'success' %}
+                        <i class="bi bi-check-circle-fill" style="font-size: 1.5rem;"></i>
+                    {% elif overview_item.color == 'warning' %}
+                        <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.5rem;"></i>
+                    {% elif overview_item.color == 'danger' %}
+                        <i class="bi bi-x-circle-fill" style="font-size: 1.5rem;"></i>
+                    {% else %}
+                        <i class="bi bi-info-circle-fill" style="font-size: 1.5rem;"></i>
+                    {% endif %}
+                    <strong>{{ overview_item.text }}</strong>
+                </div>
+            {% else %}
+                <div style="height: 15px;"></div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-md-6 mb-3">
+        <a href="{% url 'health_app:add_metric' %}" class="btn btn-primary btn-lg w-100 shadow-lg">
+            <i class="bi bi-plus-circle-fill"></i> บันทึกข้อมูลสุขภาพใหม่
+        </a>
+    </div>
+    <div class="col-md-6 mb-3">
+        <a href="{% url 'health_app:history' %}" class="btn btn-success btn-lg w-100 shadow-lg">
+            <i class="bi bi-clock-history"></i> ดูประวัติและกราฟ
+        </a>
+    </div>
+</div>
+{% endblock %}
