@@ -8,9 +8,12 @@ import hmac
 import secrets
 import time
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, TYPE_CHECKING
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import BaseBackend
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractUser
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest
@@ -31,7 +34,7 @@ class SecureAuthenticationBackend(BaseBackend):
     Enhanced authentication backend with security features
     """
     
-    def authenticate(self, request: HttpRequest, username: str = None, password: str = None, **kwargs) -> Optional[User]:
+    def authenticate(self, request: HttpRequest, username: str = None, password: str = None, **kwargs):
         """Authenticate user with enhanced security checks"""
         
         if not username or not password:
@@ -77,10 +80,9 @@ class SecureAuthenticationBackend(BaseBackend):
         
         # Log successful authentication
         logger.info(f"Successful authentication for user: {username} from IP: {client_ip}")
-        
         return user
     
-    def get_user(self, user_id: int) -> Optional[User]:
+    def get_user(self, user_id: int):
         """Get user by ID"""
         try:
             return User.objects.get(pk=user_id)
@@ -147,7 +149,7 @@ class SecureAuthenticationBackend(BaseBackend):
         # Simulate the time it takes to hash a password
         fake_hash = hashlib.pbkdf2_hmac('sha256', password.encode(), b'fake_salt', 100000)
     
-    def _is_password_expired(self, user: User) -> bool:
+    def _is_password_expired(self, user) -> bool:
         """Check if user's password has expired"""
         if not hasattr(user, 'password_changed_date'):
             return False
@@ -168,10 +170,10 @@ class MultiFactorAuthentication:
     @staticmethod
     def generate_totp_secret() -> str:
         """Generate TOTP secret for user"""
-        return pyotp.random_base32()
+        return secrets.token_hex(20)
     
     @staticmethod
-    def generate_qr_code(user: User, secret: str) -> str:
+    def generate_qr_code(user, secret: str) -> str:
         """Generate QR code for TOTP setup"""
         totp = pyotp.TOTP(secret)
         provisioning_uri = totp.provisioning_uri(
@@ -216,7 +218,7 @@ class SessionSecurity:
     """
     
     @staticmethod
-    def create_secure_session(request: HttpRequest, user: User) -> Dict[str, Any]:
+    def create_secure_session(request: HttpRequest, user) -> Dict[str, Any]:
         """Create secure session with additional security measures"""
         session_data = {
             'user_id': user.id,
@@ -293,7 +295,7 @@ class PasswordPolicy:
     """
     
     @staticmethod
-    def validate_password_strength(password: str, user: User = None) -> Dict[str, Any]:
+    def validate_password_strength(password: str, user=None) -> Dict[str, Any]:
         """Comprehensive password strength validation"""
         result = {
             'valid': True,
@@ -385,7 +387,7 @@ class PasswordPolicy:
         return False
     
     @staticmethod
-    def _contains_user_info(password: str, user: User) -> bool:
+    def _contains_user_info(password: str, user):
         """Check if password contains user information"""
         password_lower = password.lower()
         

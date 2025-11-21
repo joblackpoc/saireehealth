@@ -30,8 +30,14 @@ class RealTimeSecurityMiddleware(MiddlewareMixin):
         # Track request statistics
         self._update_request_stats(request.path, client_ip, request.user)
         
+        # Check for potential DDoS or brute force patterns
+        self._check_rate_limiting(client_ip, request.path)
+        
         # Log security-sensitive paths
-        sensitive_paths = ['/admin/', '/accounts/admin/', '/api/', '/security/']
+        sensitive_paths = [
+            '/admin/', '/accounts/admin/', '/api/', '/security/',
+            '/health/api/', '/accounts/api/', '/media/', '/static/admin/'
+        ]
         if any(path in request.path for path in sensitive_paths):
             self._log_sensitive_access(request, client_ip)
     
@@ -46,6 +52,10 @@ class RealTimeSecurityMiddleware(MiddlewareMixin):
             # Log failed requests (4xx, 5xx)
             if response.status_code >= 400:
                 self._log_failed_request(request, response)
+            
+            # Check for suspicious patterns
+            if response.status_code == 404 and self._is_suspicious_404(request):
+                self._log_suspicious_activity(request, self.get_client_ip(request))
         
         return response
     
@@ -85,10 +95,10 @@ class RealTimeSecurityMiddleware(MiddlewareMixin):
             cache.set('realtime_request_stats', stats_to_cache, 3600)  # 1 hour
             
         except Exception as e:
-            security_logger.error(f\"Error updating request stats: {str(e)}\")
+            security_logger.error(f"Error updating request stats: {str(e)}")
     
     def _update_performance_stats(self, response_time, status_code):
-        \"\"\"Update performance metrics\"\"\"
+        """Update performance metrics"""
         try:
             perf_stats = cache.get('realtime_performance_stats', {
                 'response_times': [],
@@ -114,10 +124,10 @@ class RealTimeSecurityMiddleware(MiddlewareMixin):
             cache.set('realtime_performance_stats', perf_stats, 3600)
             
         except Exception as e:
-            security_logger.error(f\"Error updating performance stats: {str(e)}\")
+            security_logger.error(f"Error updating performance stats: {str(e)}")
     
     def _log_sensitive_access(self, request, client_ip):
-        \"\"\"Log access to sensitive paths\"\"\"
+        """Log access to sensitive paths"""
         try:
             from security_enhancements.security_audit import SecurityAuditTracker, SecurityEventTypes, SecurityEventSeverity
             
@@ -136,10 +146,10 @@ class RealTimeSecurityMiddleware(MiddlewareMixin):
         except ImportError:
             pass
         except Exception as e:
-            security_logger.error(f\"Error logging sensitive access: {str(e)}\")
+            security_logger.error(f"Error logging sensitive access: {str(e)}")
     
     def _log_failed_request(self, request, response):
-        \"\"\"Log failed requests for security monitoring\"\"\"
+        """Log failed requests for security monitoring"""
         try:
             from security_enhancements.security_audit import SecurityAuditTracker, SecurityEventTypes, SecurityEventSeverity
             
@@ -160,22 +170,88 @@ class RealTimeSecurityMiddleware(MiddlewareMixin):
         except ImportError:
             pass
         except Exception as e:
-            security_logger.error(f\"Error logging failed request: {str(e)}\")
+            security_logger.error(f"Error logging failed request: {str(e)}")
+    
+    def _check_rate_limiting(self, client_ip, path):
+        """Check for potential rate limiting violations"""
+        try:
+            # Track requests per IP per minute
+            cache_key = f"rate_limit:{client_ip}:{int(time.time() // 60)}"
+            current_count = cache.get(cache_key, 0)
+            
+            if current_count > 100:  # More than 100 requests per minute
+                self._log_rate_limit_violation(client_ip, current_count)
+            
+            cache.set(cache_key, current_count + 1, 60)  # 60 second TTL
+            
+        except Exception as e:
+            security_logger.error(f"Error checking rate limit: {str(e)}")
+    
+    def _is_suspicious_404(self, request):
+        """Detect suspicious 404 patterns that might indicate scanning"""
+        suspicious_patterns = [
+            '.php', '.asp', '.aspx', '.jsp', '.cgi',
+            'wp-admin', 'phpmyadmin', 'admin.php',
+            '.env', '.git', '.svn', 'backup',
+            'xmlrpc', 'wp-content', 'wp-includes'
+        ]
+        
+        path = request.path.lower()
+        return any(pattern in path for pattern in suspicious_patterns)
+    
+    def _log_rate_limit_violation(self, client_ip, request_count):
+        """Log potential DDoS or brute force attempt"""
+        try:
+            from security_enhancements.security_audit import SecurityAuditTracker
+            
+            SecurityAuditTracker.log_security_event(
+                'RATE_LIMIT_VIOLATION',
+                f'High request rate detected from IP: {client_ip}',
+                ip_address=client_ip,
+                severity='HIGH',
+                additional_data={
+                    'request_count_per_minute': request_count,
+                    'detection_time': timezone.now().isoformat()
+                }
+            )
+        except Exception as e:
+            security_logger.error(f"Error logging rate limit violation: {str(e)}")
+    
+    def _log_suspicious_activity(self, request, client_ip):
+        """Log suspicious 404 activity that might indicate scanning"""
+        try:
+            from security_enhancements.security_audit import SecurityAuditTracker
+            
+            SecurityAuditTracker.log_security_event(
+                'SUSPICIOUS_SCANNING',
+                f'Potential vulnerability scanning detected',
+                ip_address=client_ip,
+                severity='MEDIUM',
+                additional_data={
+                    'requested_path': request.path,
+                    'method': request.method,
+                    'user_agent': request.META.get('HTTP_USER_AGENT', '')[:100]
+                }
+            )
+        except Exception as e:
+            security_logger.error(f"Error logging suspicious activity: {str(e)}")
+
 
 class SecurityHeadersMiddleware(MiddlewareMixin):
-    \"\"\"Add security headers to all responses\"\"\"
+    """Add security headers to all responses"""
     
     def process_response(self, request, response):
-        \"\"\"Add security headers\"\"\"
+        """Add security headers"""
         # Security headers for protection
         response['X-Content-Type-Options'] = 'nosniff'
         response['X-Frame-Options'] = 'DENY'
         response['X-XSS-Protection'] = '1; mode=block'
         response['Referrer-Policy'] = 'strict-origin-when-cross-origin'
         response['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+        response['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none';"
         
-        # Only add HSTS in production
-        if not request.is_secure():  # Not HTTPS
-            response['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        # Only add HSTS on HTTPS connections
+        if request.is_secure():  # HTTPS only
+            response['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
         
         return response

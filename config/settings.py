@@ -81,6 +81,10 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Static file serving for PythonAnywhere
+    'security_enhancements.advanced_attack_protection.AdvancedSecurityMiddleware',  # Advanced attack protection
+    'security_enhancements.extended_attack_protection.ExtendedSecurityMiddleware',  # Extended attack protection
+    'security_enhancements.realtime_monitoring_middleware.RealTimeSecurityMiddleware',  # Real-time monitoring
+    'security_enhancements.realtime_monitoring_middleware.SecurityHeadersMiddleware',  # Security headers
     'security_enhancements.owasp_security.OWASPSecurityMiddleware',  # Comprehensive OWASP security
     'security_enhancements.owasp_security.InputSanitizationMiddleware',  # Input sanitization
     'security_enhancements.owasp_security.AuthenticationSecurityMiddleware',  # Enhanced auth security
@@ -486,3 +490,27 @@ if not DEBUG:
         'django.contrib.staticfiles.finders.FileSystemFinder',
         'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     ]
+
+# Extended Security Settings
+EXTENDED_SQLMAP_PROTECTION = True
+EXTENDED_BRUTE_FORCE_PROTECTION = True
+EXTENDED_FILE_UPLOAD_PROTECTION = True
+EXTENDED_ORM_INJECTION_PROTECTION = True
+EXTENDED_TEMPLATE_INJECTION_PROTECTION = True
+
+# File Upload Security Settings
+MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
+ALLOWED_UPLOAD_EXTENSIONS = [
+    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp',
+    '.pdf', '.txt', '.csv', '.doc', '.docx', '.xls', '.xlsx',
+    '.ppt', '.pptx'
+]
+FILE_UPLOAD_VIRUS_SCAN = True
+FILE_UPLOAD_CONTENT_VALIDATION = True
+
+# Brute Force Protection Settings
+BRUTE_FORCE_LOGIN_THRESHOLD = 10
+BRUTE_FORCE_USER_ENUM_THRESHOLD = 10
+BRUTE_FORCE_PASSWORD_SPRAY_THRESHOLD = 20
+BRUTE_FORCE_CREDENTIAL_STUFF_THRESHOLD = 50
+BRUTE_FORCE_RATE_LIMIT_THRESHOLD = 60
