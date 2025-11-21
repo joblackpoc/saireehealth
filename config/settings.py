@@ -81,14 +81,16 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Static file serving for PythonAnywhere
-    'security_enhancements.basic_middleware.BasicSecurityHeadersMiddleware',  # Basic security headers only
+    'security_enhancements.owasp_security.OWASPSecurityMiddleware',  # Comprehensive OWASP security
+    'security_enhancements.owasp_security.InputSanitizationMiddleware',  # Input sanitization
+    'security_enhancements.owasp_security.AuthenticationSecurityMiddleware',  # Enhanced auth security
+    'security_enhancements.owasp_security.DataProtectionMiddleware',  # Data protection
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'security_enhancements.basic_middleware.MinimalCSPMiddleware',  # Minimal CSP for functionality
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -131,20 +133,29 @@ if DATABASE_URL:
 else:
     # Default configuration - update for PythonAnywhere MySQL
     if not DEBUG:
-        # PythonAnywhere MySQL configuration
+        # Production database configuration
+        # For PythonAnywhere, update these settings:
+        # DATABASES = {
+        #     'default': {
+        #         'ENGINE': 'django.db.backends.mysql',
+        #         'NAME': config('DB_NAME', default='your_username$healthprogress'),
+        #         'USER': config('DB_USER', default='your_username'),
+        #         'PASSWORD': config('DB_PASSWORD', default=''),
+        #         'HOST': config('DB_HOST', default='your_username.mysql.pythonanywhere-services.com'),
+        #         'PORT': config('DB_PORT', default='3306'),
+        #         'OPTIONS': {
+        #             'charset': 'utf8mb4',
+        #             'sql_mode': 'STRICT_TRANS_TABLES',
+        #             'init_command': "SET innodb_strict_mode=1",
+        #         },
+        #     }
+        # }
+        
+        # For now, use SQLite even in production mode for testing
         DATABASES = {
             'default': {
-                'ENGINE': 'django.db.backends.mysql',
-                'NAME': config('DB_NAME', default='your_username$healthprogress'),
-                'USER': config('DB_USER', default='your_username'),
-                'PASSWORD': config('DB_PASSWORD', default=''),
-                'HOST': config('DB_HOST', default='your_username.mysql.pythonanywhere-services.com'),
-                'PORT': config('DB_PORT', default='3306'),
-                'OPTIONS': {
-                    'charset': 'utf8mb4',
-                    'sql_mode': 'STRICT_TRANS_TABLES',
-                    'init_command': "SET innodb_strict_mode=1",
-                },
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
             }
         }
     else:
@@ -161,6 +172,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 12}},
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {'NAME': 'security_enhancements.validators.OWASPPasswordValidator', 'OPTIONS': {'min_length': 12, 'max_length': 128}},
 ]
 
 LANGUAGE_CODE = 'th'
@@ -324,6 +336,30 @@ handler403 = 'config.views.custom_403'
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 handler400 = 'config.views.custom_400'
+
+# OWASP Authentication Backend
+AUTHENTICATION_BACKENDS = [
+    'security_enhancements.secure_auth.SecureAuthenticationBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# OWASP Security Configuration
+MAX_LOGIN_ATTEMPTS = 5
+ACCOUNT_LOCKOUT_TIME = 1800  # 30 minutes
+MAX_IP_ATTEMPTS = 10
+IP_LOCKOUT_TIME = 3600  # 1 hour
+PASSWORD_AGE_LIMIT_DAYS = 90
+SESSION_MAX_AGE_HOURS = 24
+MAX_REQUEST_SIZE = 10 * 1024 * 1024  # 10MB
+TOTP_ISSUER = 'HealthProgress Security'
+
+# Enhanced File Upload Security
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440  # 2.5 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440  # 2.5 MB
+FILE_UPLOAD_PERMISSIONS = 0o644
+FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
+ALLOWED_UPLOAD_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.txt']
+MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5MB
 
 # Logging Configuration - PythonAnywhere optimized
 log_dir = BASE_DIR / 'logs' if DEBUG else Path('/home/yourusername/logs')  # Update path
