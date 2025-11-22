@@ -3537,7 +3537,7 @@ def export_health_overview_pdf(request, latest_overview, section='health_overvie
     title_style = ParagraphStyle(
         'CustomTitle',
         parent=styles['Heading1'],
-        fontSize=18,
+        fontSize=22,
         spaceAfter=30,
         textColor=colors.darkblue,
         alignment=TA_CENTER,
@@ -3547,7 +3547,7 @@ def export_health_overview_pdf(request, latest_overview, section='health_overvie
     heading_style = ParagraphStyle(
         'CustomHeading',
         parent=styles['Heading2'],
-        fontSize=14,
+        fontSize=20,
         spaceAfter=12,
         textColor=colors.darkblue,
         alignment=TA_LEFT,
@@ -3557,7 +3557,7 @@ def export_health_overview_pdf(request, latest_overview, section='health_overvie
     subheading_style = ParagraphStyle(
         'CustomSubHeading',
         parent=styles['Heading3'],
-        fontSize=12,
+        fontSize=18,
         spaceAfter=8,
         textColor=colors.darkred,
         alignment=TA_LEFT,
@@ -3567,7 +3567,7 @@ def export_health_overview_pdf(request, latest_overview, section='health_overvie
     normal_style = ParagraphStyle(
         'CustomNormal',
         parent=styles['Normal'],
-        fontSize=10,
+        fontSize=16,
         spaceAfter=6,
         alignment=TA_LEFT,
         fontName=thai_font
@@ -3622,7 +3622,7 @@ def export_health_overview_pdf(request, latest_overview, section='health_overvie
         if health_score >= 80:
             score_color_hex = '#28a745'  # green
         elif health_score >= 60:
-            score_color_hex = '#ffc107'  # orange
+            score_color_hex = '#ff7707'  # orange
         else:
             score_color_hex = '#dc3545'  # red
         
@@ -3692,7 +3692,7 @@ def export_health_overview_pdf(request, latest_overview, section='health_overvie
                     'bmi': '18.5-24.9',
                     'blood_pressure': '<120/80',
                     'fat_percent': 'M: 10-20%, F: 16-25%',
-                    'visceral_fat': '1-12',
+                    'visceral_fat': '1-9',
                     'muscle_percent': 'M: >38%, F: >28%',
                     'waist': 'M: <90cm, F: <80cm',
                     'cholesterol': '<200 mg/dL',
@@ -3743,7 +3743,7 @@ def export_health_overview_pdf(request, latest_overview, section='health_overvie
                 if analysis_color == 'success':
                     text_color_hex = '#28a745'  # green
                 elif analysis_color == 'warning':
-                    text_color_hex = '#ffc107'  # orange
+                    text_color_hex = "#ff7707"  # orange
                 elif analysis_color == 'danger':
                     text_color_hex = '#dc3545'  # red
                 else:
@@ -3773,7 +3773,7 @@ def export_health_overview_pdf(request, latest_overview, section='health_overvie
         if risk_level == 'low':
             risk_color_hex = '#28a745'  # green
         elif risk_level == 'medium':
-            risk_color_hex = '#ffc107'  # orange
+            risk_color_hex = '#ff7707'  # orange
         elif risk_level == 'high':
             risk_color_hex = '#dc3545'  # red
         else:
@@ -3791,7 +3791,7 @@ def export_health_overview_pdf(request, latest_overview, section='health_overvie
             comparison_data = []
             comparison_data.append(['Metric', 'First Record', 'Latest Record', 'Change'])
             
-            metrics_to_show = ['bmi', 'fat_percent', 'muscle_percent']
+            metrics_to_show = ['bmi', 'fat_percent', 'muscle_percent', 'visceral_fat', 'blood_pressure', 'waist', 'height', 'weight']
             for metric in metrics_to_show:
                 if metric in comparison_analysis and comparison_analysis[metric]:
                     metric_info = comparison_analysis[metric]
@@ -3799,7 +3799,12 @@ def export_health_overview_pdf(request, latest_overview, section='health_overvie
                         formatted_name = {
                             'bmi': 'BMI',
                             'fat_percent': 'Body Fat %',
-                            'muscle_percent': 'Muscle %'
+                            'muscle_percent': 'Muscle %',
+                            'visceral_fat': 'Visceral Fat',
+                            'blood_pressure': 'Blood Pressure',
+                            'waist': 'Waist',
+                            'height': 'Height',
+                            'weight': 'Weight'
                         }.get(metric, metric.title())
                         
                         first_val = metric_info.get('start_value', 'N/A')

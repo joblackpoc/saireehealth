@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Bad Request - Health Progress{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-lg">
+                <div class="card-body p-5">
+                    <h1 class="display-1 text-warning">400</h1>
+                    <h2 class="mb-4">Bad Request</h2>
+                    <p class="lead mb-4">ขอภัย คำขอของคุณไม่ถูกต้อง</p>
+                    <p class="text-muted">มีข้อมูลบางอย่างไม่ถูกต้องในคำขอของคุณ</p>
+                    <div class="mt-4">
+                        <a href="{% url 'accounts:home' %}" class="btn btn-success btn-lg me-2">
+                            <i class="bi bi-house-fill"></i> กลับหน้าแรก
+                        </a>
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-arrow-left"></i> ย้อนกลับ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

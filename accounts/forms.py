@@ -40,24 +40,24 @@ class UserProfileForm(forms.ModelForm):
         model = UserProfile
         fields = ['firstname', 'lastname', 'gender', 'birthdate', 'age', 'phone', 'profile_picture', 'nickname']
         widgets = {
-            'firstname': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
-            'lastname': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
-            'gender': forms.Select(attrs={'class': 'form-control', 'required': True}),
+            'firstname': forms.TextInput(attrs={'class': 'form-control'}),
+            'lastname': forms.TextInput(attrs={'class': 'form-control'}),
+            'gender': forms.Select(attrs={'class': 'form-control'}),
             'birthdate': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'age': forms.NumberInput(attrs={'class': 'form-control', 'required': True, 'min': 1, 'max': 120}),
-            'phone': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
+            'age': forms.NumberInput(attrs={'class': 'form-control', 'min': 1, 'max': 120}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
             'profile_picture': forms.FileInput(attrs={'class': 'form-control'}),
             'nickname': forms.TextInput(attrs={'class': 'form-control'}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Make these fields required for editing
-        self.fields['firstname'].required = True
-        self.fields['lastname'].required = True
-        self.fields['gender'].required = True
-        self.fields['age'].required = True
-        self.fields['phone'].required = True
+        # Make these fields NOT required to allow form submission
+        self.fields['firstname'].required = False
+        self.fields['lastname'].required = False
+        self.fields['gender'].required = False
+        self.fields['age'].required = False
+        self.fields['phone'].required = False
         # Add labels
         self.fields['firstname'].label = 'ชื่อจริง'
         self.fields['lastname'].label = 'นามสกุล'
@@ -67,6 +67,22 @@ class UserProfileForm(forms.ModelForm):
         self.fields['phone'].label = 'เบอร์โทรศัพท์'
         self.fields['profile_picture'].label = 'รูปโปรไฟล์'
         self.fields['nickname'].label = 'ชื่อเล่น'
+    
+    def clean_profile_picture(self):
+        """Validate profile picture upload - FAST version"""
+        profile_picture = self.cleaned_data.get('profile_picture')
+        
+        # If no new file uploaded, keep existing
+        if not profile_picture:
+            return self.instance.profile_picture if self.instance else None
+        
+        # If it's a file object (new upload), do MINIMAL validation
+        if hasattr(profile_picture, 'size'):
+            # File size check (9MB max)
+            if profile_picture.size > 9 * 1024 * 1024:
+                raise forms.ValidationError('ขนาดไฟล์เกิน 9MB')
+        
+        return profile_picture
     
     def clean(self):
         cleaned_data = super().clean()

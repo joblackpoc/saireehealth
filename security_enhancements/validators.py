@@ -8,13 +8,12 @@ import ipaddress
 from typing import List, Dict, Any, Optional, Union
 from urllib.parse import urlparse
 from django.core.exceptions import ValidationError
-from django.contrib.auth.password_validation import BasePasswordValidator
 from django.utils.translation import gettext as _
 import logging
 
 logger = logging.getLogger('security_enhancements')
 
-class OWASPPasswordValidator(BasePasswordValidator):
+class OWASPPasswordValidator:
     """
     Enhanced password validator following OWASP password guidelines
     """

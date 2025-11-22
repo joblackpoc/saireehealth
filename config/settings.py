@@ -6,9 +6,13 @@ CRITICAL: This version includes comprehensive security fixes
 from pathlib import Path
 from decouple import config, Csv
 import os
+import sys
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Detect environment
+RUNNING_ON_PYTHONANYWHERE = 'PYTHONANYWHERE_SITE' in os.environ or 'PYTHONANYWHERE_DOMAIN' in os.environ
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # SECRET_KEY must be set via environment variable in production
@@ -18,36 +22,13 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 try:
     SECRET_KEY = config('SECRET_KEY')
-except Exception:
-    if not DEBUG:
-        from django.core.exceptions import ImproperlyConfigured
-        raise ImproperlyConfigured(
-            'SECRET_KEY environment variable is required in production! '
-            'Generate one with: python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"'
-        )
-    # Only for local development - generate temporary key
-    import os
-    SECRET_KEY = 'dev-only-' + os.urandom(32).hex()
-    print("⚠️  Using temporary SECRET_KEY for development. Set SECRET_KEY in .env for persistence.")
-
-# Security warning if DEBUG is enabled
-if DEBUG:
-    import warnings
-    warnings.warn(
-        "⚠️  DEBUG mode is enabled! This should NEVER be enabled in production!",
-        RuntimeWarning
-    )
-
-if not DEBUG:
-    if 'DEVELOPMENT' in SECRET_KEY or 'insecure' in SECRET_KEY:
-        raise ValueError(
-            'Invalid SECRET_KEY detected in production! '
-            'Set SECRET_KEY environment variable with a secure random key.'
-        )
-    if len(SECRET_KEY) < 50:
-        raise ValueError(
-            'SECRET_KEY too short! Must be at least 50 characters.'
-        )
+except:
+    if DEBUG:
+        # Development fallback
+        SECRET_KEY = 'django-insecure-dev-key-change-in-production-' + 'x' * 50
+        print("⚠️  WARNING: Using development SECRET_KEY. Set SECRET_KEY in .env file!")
+    else:
+        raise ValueError("SECRET_KEY must be set in .env file for production!")
 
 # SECURITY: ALLOWED_HOSTS must be explicitly configured
 ALLOWED_HOSTS = config(
@@ -75,27 +56,43 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'accounts',
     'health_app',
-    'security_enhancements',
+    # 'security_enhancements',  # Disabled due to heavy ML dependencies causing segfaults
 ]
 
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Static file serving for PythonAnywhere
-    'security_enhancements.advanced_attack_protection.AdvancedSecurityMiddleware',  # Advanced attack protection
-    'security_enhancements.extended_attack_protection.ExtendedSecurityMiddleware',  # Extended attack protection
-    'security_enhancements.realtime_monitoring_middleware.RealTimeSecurityMiddleware',  # Real-time monitoring
-    'security_enhancements.realtime_monitoring_middleware.SecurityHeadersMiddleware',  # Security headers
-    'security_enhancements.owasp_security.OWASPSecurityMiddleware',  # Comprehensive OWASP security
-    'security_enhancements.owasp_security.InputSanitizationMiddleware',  # Input sanitization
-    'security_enhancements.owasp_security.AuthenticationSecurityMiddleware',  # Enhanced auth security
-    'security_enhancements.owasp_security.DataProtectionMiddleware',  # Data protection
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
+# Enable advanced security only if ENABLE_ADVANCED_SECURITY is True
+ENABLE_ADVANCED_SECURITY = config('ENABLE_ADVANCED_SECURITY', default=False, cast=bool)
+
+if ENABLE_ADVANCED_SECURITY:
+    INSTALLED_APPS.append('security_enhancements')
+    MIDDLEWARE = [
+        'django.middleware.security.SecurityMiddleware',
+        'whitenoise.middleware.WhiteNoiseMiddleware',
+        'security_enhancements.advanced_attack_protection.AdvancedSecurityMiddleware',
+        'security_enhancements.extended_attack_protection.ExtendedSecurityMiddleware',
+        'security_enhancements.realtime_monitoring_middleware.RealTimeSecurityMiddleware',
+        'security_enhancements.realtime_monitoring_middleware.SecurityHeadersMiddleware',
+        'security_enhancements.owasp_security.OWASPSecurityMiddleware',
+        'security_enhancements.owasp_security.InputSanitizationMiddleware',
+        'security_enhancements.owasp_security.AuthenticationSecurityMiddleware',
+        'security_enhancements.owasp_security.DataProtectionMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    ]
+else:
+    MIDDLEWARE = [
+        'django.middleware.security.SecurityMiddleware',
+        'whitenoise.middleware.WhiteNoiseMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    ]
 
 ROOT_URLCONF = 'config.urls'
 
@@ -190,11 +187,13 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-# PythonAnywhere static files path
-if not DEBUG:
-    STATIC_ROOT = '/home/yourusername/yourdomain.com/static'  # Update with your actual paths
-    MEDIA_ROOT = '/home/yourusername/yourdomain.com/media'   # Update with your actual paths
+# Static and Media paths - compatible with both localhost and PythonAnywhere
+if RUNNING_ON_PYTHONANYWHERE:
+    # PythonAnywhere paths
+    STATIC_ROOT = config('STATIC_ROOT', default='/home/yourusername/yourdomain.com/static')
+    MEDIA_ROOT = config('MEDIA_ROOT', default='/home/yourusername/yourdomain.com/media')
 else:
+    # Local development paths
     STATIC_ROOT = BASE_DIR / 'staticfiles'
     MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -313,8 +312,8 @@ CSP_FORM_ACTION = ("'self'",)
 CSP_UPGRADE_INSECURE_REQUESTS = True if not DEBUG else False
 
 # File Upload Security
-FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440  # 2.5 MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440  # 2.5 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 13107200  # 12.5 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 13107200  # 12.5 MB
 FILE_UPLOAD_PERMISSIONS = 0o644
 FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
 
@@ -365,8 +364,14 @@ FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
 ALLOWED_UPLOAD_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.txt']
 MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5MB
 
-# Logging Configuration - PythonAnywhere optimized
-log_dir = BASE_DIR / 'logs' if DEBUG else Path('/home/yourusername/logs')  # Update path
+# Logging Configuration - Compatible with localhost and PythonAnywhere
+if RUNNING_ON_PYTHONANYWHERE:
+    log_dir = Path(config('LOG_DIR', default='/home/yourusername/logs'))
+else:
+    log_dir = BASE_DIR / 'logs'
+
+# Ensure logs directory exists
+os.makedirs(log_dir, exist_ok=True)
 
 LOGGING = {
     'version': 1,
@@ -455,11 +460,7 @@ if not DEBUG:
     EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
     DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@healthprogress.com')
 
-# Ensure logs directory exists
-if DEBUG:
-    os.makedirs(BASE_DIR / 'logs', exist_ok=True)
-else:
-    os.makedirs('/home/yourusername/logs', exist_ok=True)  # Update with your username
+# Logs directory already created above
 
 # PythonAnywhere Production Settings
 if not DEBUG:

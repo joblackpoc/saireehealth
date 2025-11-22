@@ -4,14 +4,40 @@ Advanced machine learning algorithms for security pattern detection and predicti
 Expert Blue Team Implementation - ETH Standards
 """
 import json
-import numpy as np
-import pandas as pd
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 from collections import defaultdict, deque
 from django.core.cache import cache
 from django.utils import timezone
 from .security_core import SecurityLogger
+
+# Optional ML imports - graceful degradation if not available
+try:
+    import numpy as np
+    import pandas as pd
+    ML_AVAILABLE = True
+except ImportError:
+    ML_AVAILABLE = False
+    # Provide fallback
+    class np:
+        @staticmethod
+        def array(data):
+            return data
+        @staticmethod
+        def mean(data):
+            return sum(data) / len(data) if data else 0
+        @staticmethod
+        def std(data):
+            if not data:
+                return 0
+            mean_val = sum(data) / len(data)
+            variance = sum((x - mean_val) ** 2 for x in data) / len(data)
+            return variance ** 0.5
+    
+    class pd:
+        @staticmethod
+        def DataFrame(data):
+            return {'data': data}
 
 
 class SecurityAnalyticsEngine:

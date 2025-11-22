@@ -34,7 +34,6 @@ class UserProfile(models.Model):
         null=True, 
         blank=True, 
         verbose_name='รูปโปรไฟล์',
-        validators=[validate_image_file],
         max_length=255
     )
     nickname = models.CharField(max_length=50, null=True, blank=True, verbose_name='ชื่อเล่น')

@@ -389,9 +389,16 @@ def profile_view(request):
     
     if request.method == 'POST':
         form = UserProfileForm(request.POST, request.FILES, instance=profile)
+        
         if form.is_valid():
             try:
-                saved_profile = form.save()
+                saved_profile = form.save(commit=False)
+                
+                # Handle profile picture upload explicitly
+                if 'profile_picture' in request.FILES:
+                    saved_profile.profile_picture = request.FILES['profile_picture']
+                
+                saved_profile.save()
                 log_activity(request.user, 'profile_update', 'Profile updated', request)
                 messages.success(request, 'อัปเดตโปรไฟล์สำเร็จ!')
                 return redirect('accounts:profile')
@@ -410,12 +417,54 @@ def profile_view(request):
     mfa_warning = profile.requires_mfa() and not profile.mfa_enabled
     mfa_required_but_not_setup = mfa_warning  # More descriptive variable name
     
+    # Calculate age details if birthdate is available
+    age_details = None
+    if profile.birthdate:
+        from datetime import date
+        today = date.today()
+        birth = profile.birthdate
+        
+        # Calculate years, months, days
+        years = today.year - birth.year
+        months = today.month - birth.month
+        days = today.day - birth.day
+        
+        # Adjust if days is negative
+        if days < 0:
+            months -= 1
+            # Get days in previous month
+            if today.month == 1:
+                prev_month = 12
+                prev_year = today.year - 1
+            else:
+                prev_month = today.month - 1
+                prev_year = today.year
+            from calendar import monthrange
+            days += monthrange(prev_year, prev_month)[1]
+        
+        # Adjust if months is negative
+        if months < 0:
+            years -= 1
+            months += 12
+        
+        # Calculate total days
+        total_days = (today - birth).days
+        
+        age_details = {
+            'years': years,
+            'months': months,
+            'days': days,
+            'total_days': total_days,
+            'formatted': f'{years} ปี {months} เดือน {days} วัน'
+        }
+    
     return render(request, 'accounts/profile.html', {
         'form': form,
         'profile': profile,
         'mfa_warning': mfa_warning,
         'mfa_required_but_not_setup': mfa_required_but_not_setup,
         'profile_incomplete': profile_incomplete,
+        'age_details': age_details,
     })
 
 

@@ -27,9 +27,15 @@ import hashlib
 import statistics
 from collections import deque, defaultdict
 import concurrent.futures
-import websockets
 
 # Optional imports
+try:
+    import websockets
+    WEBSOCKETS_AVAILABLE = True
+except ImportError:
+    WEBSOCKETS_AVAILABLE = False
+    websockets = None
+
 try:
     import aioredis
     AIOREDIS_AVAILABLE = True

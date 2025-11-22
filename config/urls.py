@@ -12,11 +12,12 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('health/', include('health_app.urls')),
     
-    # Phase 7: Advanced Security Monitoring & Intelligence
-    path('security/', include('security_enhancements.urls')),
-    
     path('', RedirectView.as_view(url='/accounts/', permanent=False)),
 ]
+
+# Advanced Security Monitoring (optional - only if enabled)
+if hasattr(settings, 'ENABLE_ADVANCED_SECURITY') and settings.ENABLE_ADVANCED_SECURITY:
+    urlpatterns.append(path('security/', include('security_enhancements.urls')))
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

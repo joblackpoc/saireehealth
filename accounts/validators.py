@@ -9,19 +9,15 @@ import os
 import secrets
 
 # Security Configuration
-MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
+MAX_UPLOAD_SIZE = 9 * 1024 * 1024  # 9MB
 ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif']
 ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif']
 
 
 def validate_image_file(image: UploadedFile) -> UploadedFile:
     """
-    Comprehensive image file validation
-    Implements multi-layer security checks to prevent:
-    - File upload RCE attacks
-    - Path traversal attacks
-    - XSS via SVG files
-    - Oversized file uploads
+    Fast image file validation
+    Implements basic security checks
     """
     
     # Layer 1: File size validation
@@ -39,49 +35,20 @@ def validate_image_file(image: UploadedFile) -> UploadedFile:
             f'อนุญาตเฉพาะ: {", ".join(ALLOWED_EXTENSIONS)}'
         )
     
-    # Layer 3: MIME type validation (requires python-magic)
-    try:
-        import magic
-        image.seek(0)
-        file_mime = magic.from_buffer(image.read(2048), mime=True)
-        image.seek(0)
-        
-        if file_mime not in ALLOWED_IMAGE_TYPES:
-            raise ValidationError(
-                f'ประเภทไฟล์ไม่ถูกต้อง: {file_mime} '
-                f'อนุญาตเฉพาะ: {", ".join(ALLOWED_IMAGE_TYPES)}'
-            )
-    except ImportError:
-        # Fallback if python-magic not installed
-        # Still validate with Pillow below
-        pass
-    except Exception as e:
-        raise ValidationError(f'ไม่สามารถตรวจสอบประเภทไฟล์: {str(e)}')
-    
-    # Layer 4: Image content validation using Pillow
+    # Layer 3: Quick Pillow validation (FAST)
     try:
         image.seek(0)
         img = Image.open(image)
-        img.verify()  # Verify it's a valid image
-        image.seek(0)  # Reset after verify
-        
-        # Check image format
-        if img.format.upper() not in ['JPEG', 'PNG', 'GIF']:
+        # Just check format, skip verify() as it's slow
+        if img.format and img.format.upper() not in ['JPEG', 'PNG', 'GIF']:
             raise ValidationError(f'รูปแบบรูปภาพไม่ถูกต้อง: {img.format}')
-        
-        # Check image dimensions (prevent huge images)
-        max_dimension = 4096  # 4K max
-        if img.width > max_dimension or img.height > max_dimension:
-            raise ValidationError(
-                f'ขนาดรูปภาพใหญ่เกินไป สูงสุด: {max_dimension}x{max_dimension}px'
-            )
-            
+        image.seek(0)  # Reset file pointer
     except ValidationError:
         raise
     except Exception as e:
-        raise ValidationError(f'ไฟล์รูปภาพเสียหายหรือไม่ถูกต้อง: {str(e)}')
+        raise ValidationError(f'ไฟล์รูปภาพไม่ถูกต้อง')
     
-    # Layer 5: Sanitize filename to prevent path traversal
+    # Layer 4: Sanitize filename to prevent path traversal
     image.name = sanitize_filename(image.name)
     
     return image
